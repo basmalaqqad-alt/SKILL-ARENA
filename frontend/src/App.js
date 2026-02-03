@@ -18,7 +18,7 @@ const theme = createTheme({
 
 function App() {
   const [mode, setMode] = useState('login'); // login | signup
-
+  console.log('Current mode:', mode);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
