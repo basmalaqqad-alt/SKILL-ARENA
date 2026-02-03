@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Box, Container, CssBaseline, ThemeProvider, createTheme, Paper } from '@mui/material';
+import {
+  Box,
+  Container,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
+  Paper,
+} from '@mui/material';
 import LogoSection from './components/LogoSection';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
@@ -11,7 +18,7 @@ const theme = createTheme({
 
 function App() {
   const [mode, setMode] = useState('login'); // login | signup
-
+  console.log('Current mode:', mode);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
