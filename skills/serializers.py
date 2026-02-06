@@ -18,3 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
         # تشفير كلمة المرور قبل الحفظ في قاعدة البيانات
         user = User.objects.create_user(**validated_data)
         return user
+    class SkillSerializer(serializers.ModelSerializer):
+     owner = serializers.ReadOnlyField(source='owner.username') # يقرأ اسم المستخدم فقط
+
+     class Meta:
+        model = Skill
+        fields = ['id', 'title', 'description', 'level', 'owner']
