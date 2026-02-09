@@ -1,69 +1,43 @@
 import React from 'react';
+import { Stack, Paper, Typography, Grid, Box } from '@mui/material';
+import { Award } from 'lucide-react';
 
 const AboutTab = () => {
-  return (
-    <div className="flex flex-col items-center animate-fade-in space-y-12">
-      {/* Play Learn Earn Icons Section */}
-      <div className="flex justify-around w-full">
-        <div className="flex flex-col items-center group">
-          <span className="text-5xl mb-3 drop-shadow-md group-hover:scale-110 transition-transform">
-            🎲
-          </span>
-          <h3 className="font-black text-[#FACA07] text-2xl tracking-tighter italic">
-            PLAY
-          </h3>
-        </div>
-        <div className="flex flex-col items-center group">
-          <span className="text-5xl mb-3 drop-shadow-md group-hover:scale-110 transition-transform">
-            💻
-          </span>
-          <h3 className="font-black text-[#FACA07] text-2xl tracking-tighter italic">
-            LEARN
-          </h3>
-        </div>
-        <div className="flex flex-col items-center group">
-          <span className="text-5xl mb-3 drop-shadow-md group-hover:scale-110 transition-transform">
-            🏆
-          </span>
-          <h3 className="font-black text-[#FACA07] text-2xl tracking-tighter italic">
-            EARN
-          </h3>
-        </div>
-      </div>
+  // Mock data for XP badges
+  const badges = [5, 20, 50, 100];
 
-      {/* Point System List from your Figma Screenshot */}
-      <div className="w-full max-w-2xl space-y-4">
-        {[
-          {
-            text: 'Earning one point for each course completion',
-            color: 'bg-[#FACA07]',
-            icon: 'XP',
-          },
-          { text: 'Earning 5 points', badge: '5', color: 'bg-[#8A2D2E]' },
-          { text: 'Earning 20 points', badge: '20', color: 'bg-[#8A2D2E]' },
-          { text: 'Earning 50 points', badge: '50', color: 'bg-[#FACA07]' },
-          { text: 'Earning 100 points', badge: '100', color: 'bg-[#FACA07]' },
-        ].map((item, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-6 bg-[#FFF7D1] p-5 rounded-2xl border border-[#FACA07]/20 shadow-sm"
-          >
-            <div
-              className={`w-14 h-14 ${item.color} rounded-xl flex items-center justify-center font-black text-white shadow-md`}
-            >
-              {item.icon || (
-                <span className="text-[10px] uppercase">
-                  Badge {item.badge}
-                </span>
-              )}
-            </div>
-            <p className="font-black text-[#8A2D2E] text-sm uppercase tracking-tight">
-              {item.text}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
+  return (
+    <Stack spacing={3}>
+      <Paper sx={{ p: 3, borderRadius: 3, bgcolor: '#8A2D2E', color: '#fff' }}>
+        <Typography variant="h6" sx={{ color: '#FACA07', mb: 1.5 }}>
+          The Arena Ecosystem 🏆
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          Instructors with the Shield Icon have verified certificates. Anyone
+          can teach, but Trusted Tutors gain more visibility and credibility!
+        </Typography>
+
+        <Grid container spacing={2}>
+          {badges.map((xp) => (
+            <Grid item xs={3} key={xp}>
+              <Box
+                sx={{
+                  p: 1,
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  borderRadius: 2,
+                  textAlign: 'center',
+                }}
+              >
+                <Award size={20} color="#FACA07" />
+                <Typography variant="caption" display="block">
+                  {xp} XP
+                </Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Paper>
+    </Stack>
   );
 };
 
