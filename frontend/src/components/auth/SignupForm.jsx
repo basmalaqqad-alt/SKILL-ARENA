@@ -3,30 +3,37 @@ import {
   Paper,
   Stack,
   Typography,
-  ToggleButtonGroup,
-  ToggleButton,
   TextField,
-  Box,
-  Fade,
   Button,
-  Chip,
   InputAdornment,
+  Box,
+  Alert,
+  ToggleButton,
+  ToggleButtonGroup,
+  Fade,
 } from '@mui/material';
-import {
-  ShieldCheck,
-  Upload,
-  XCircle,
-  CheckCircle,
-  User,
-  Mail,
-  Lock,
-} from 'lucide-react';
+import { Mail, Lock, User, CloudUpload } from 'lucide-react';
 
+/**
+ * SignupForm المطور:
+ * 1. ترتيب حقول منطقي (الشهادة تحت الباسورد).
+ * 2. تفعيل مشروط للزر (يبقى رمادي حتى اكتمال البيانات).
+ */
 const SignupForm = ({ onSignup, onSwitch }) => {
-  // State for user role: 'learner' or 'instructor'
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState('learner');
-  // State for the uploaded certificate file
   const [fileName, setFileName] = useState('');
+
+  // دالة التحقق من اكتمال الحقول
+  const isFormInvalid = () => {
+    const basicFieldsEmpty = !name.trim() || !email.trim() || !password.trim();
+    // إذا كان تيوتر، يجب أيضاً أن يرفع شهادة
+    const tutorMissingFile = role === 'tutor' && !fileName;
+
+    return basicFieldsEmpty || tutorMissingFile;
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
@@ -34,191 +41,163 @@ const SignupForm = ({ onSignup, onSwitch }) => {
     }
   };
 
-  const removeFile = () => {
-    setFileName('');
-  };
-
   return (
-    <Paper
+    <Box
       sx={{
-        p: 4,
-        borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '60vh',
       }}
     >
-      <Stack spacing={2.5}>
-        <Typography variant="h5" textAlign="center" sx={{ fontWeight: 900 }}>
-          Join the Arena
-        </Typography>
-
-        {/* Role Selection: Learner vs Instructor */}
-        <ToggleButtonGroup
-          value={role}
-          exclusive
-          onChange={(e, v) => v && setRole(v)}
-          fullWidth
-          size="small"
-          color="primary"
-        >
-          <ToggleButton value="learner" sx={{ py: 1, fontWeight: 700 }}>
-            Learner
-          </ToggleButton>
-          <ToggleButton value="instructor" sx={{ py: 1, fontWeight: 700 }}>
-            Instructor
-          </ToggleButton>
-        </ToggleButtonGroup>
-
-        {/* Common Input Fields */}
-        <TextField
-          fullWidth
-          label="Full Name"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <User size={18} />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          fullWidth
-          label="Email"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Mail size={18} />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock size={18} />
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        {/* Trusted Status Section: Only visible for Instructors */}
-        {role === 'instructor' && (
-          <Fade in={role === 'instructor'}>
-            <Box
-              sx={{
-                p: 2,
-                border: '1px dashed rgba(138, 45, 46, 0.3)',
-                borderRadius: 2,
-                bgcolor: 'rgba(138, 45, 46, 0.02)',
-              }}
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          borderRadius: 3,
+          width: '100%',
+          maxWidth: 400,
+          bgcolor: 'rgba(255, 255, 255, 0.9)',
+        }}
+      >
+        <Stack spacing={3}>
+          <Box sx={{ textAlign: 'center', mb: 1 }}>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 900, color: 'primary.main' }}
             >
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1}
-                sx={{ mb: 1 }}
-              >
-                <ShieldCheck size={18} color="#8A2D2E" />
-                <Typography variant="subtitle2" sx={{ color: '#8A2D2E' }}>
-                  Trusted Status (Optional)
-                </Typography>
-              </Stack>
+              SKILLARENA
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: 'text.secondary', letterSpacing: 1 }}
+            >
+              CHOOSE YOUR PATH • START YOUR QUEST
+            </Typography>
+          </Box>
 
-              <Typography
-                variant="caption"
-                sx={{ display: 'block', mb: 2, color: 'text.secondary' }}
-              >
-                Upload your degree to get the <b>Trusted Badge</b>. You can skip
-                this and remain a Standard Tutor.
-              </Typography>
+          {/* اختيار الدور */}
+          <ToggleButtonGroup
+            value={role}
+            exclusive
+            onChange={(e, val) => val && setRole(val)}
+            fullWidth
+            sx={{
+              '& .MuiToggleButton-root': {
+                py: 1,
+                fontWeight: 800,
+                borderRadius: 2,
+              },
+            }}
+          >
+            <ToggleButton value="learner">LEARNER</ToggleButton>
+            <ToggleButton value="tutor">TUTOR</ToggleButton>
+          </ToggleButtonGroup>
 
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <input
-                  accept="image/*,.pdf"
-                  style={{ display: 'none' }}
-                  id="cert-upload"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-                <label htmlFor="cert-upload">
-                  <Button
-                    component="span"
-                    variant="outlined"
-                    size="small"
-                    startIcon={
-                      fileName ? (
-                        <CheckCircle size={16} />
-                      ) : (
-                        <Upload size={16} />
-                      )
-                    }
-                    sx={{ textTransform: 'none' }}
-                    color={fileName ? 'success' : 'primary'}
-                  >
-                    {fileName ? 'Change File' : 'Upload Certificate'}
-                  </Button>
-                </label>
+          <TextField
+            fullWidth
+            label="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <User size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-                {fileName && (
-                  <Chip
-                    label={fileName}
-                    size="small"
-                    onDelete={removeFile}
-                    deleteIcon={<XCircle size={14} />}
-                  />
-                )}
-              </Stack>
-            </Box>
-          </Fade>
-        )}
+          <TextField
+            fullWidth
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Mail size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        {/* Submit Button: Changes style based on the Trusted status */}
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={onSignup}
-          sx={{
-            py: 1.5,
-            fontWeight: 800,
-            bgcolor:
-              role === 'instructor' && fileName
-                ? 'secondary.main'
-                : 'primary.main',
-            color: role === 'instructor' && fileName ? 'primary.main' : '#fff',
-            '&:hover': {
-              bgcolor:
-                role === 'instructor' && fileName ? '#e5b806' : '#6b2223',
-            },
-          }}
-        >
-          {role === 'instructor'
-            ? fileName
-              ? 'Apply as Trusted Tutor 🛡️'
-              : 'Join as Standard Tutor'
-            : 'Join Arena'}
-        </Button>
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        <Typography
-          onClick={onSwitch}
-          sx={{
-            cursor: 'pointer',
-            textAlign: 'center',
-            color: 'primary.main',
-            fontWeight: 700,
-            fontSize: '0.8rem',
-          }}
-        >
-          Already a Hero? Login
-        </Typography>
-      </Stack>
-    </Paper>
+          {/* إرفاق الشهادة (الآن تحت الباسورد للمدربين فقط) */}
+          {role === 'tutor' && (
+            <Fade in={role === 'tutor'}>
+              <Box>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  startIcon={<CloudUpload size={20} />}
+                  sx={{
+                    borderStyle: 'dashed',
+                    py: 1.5,
+                    fontWeight: 700,
+                    color: fileName ? 'success.main' : 'primary.main',
+                    borderColor: fileName ? 'success.main' : 'primary.main',
+                  }}
+                >
+                  {fileName
+                    ? `CERT: ${fileName.substring(0, 15)}...`
+                    : 'UPLOAD CERTIFICATE'}
+                  <input type="file" hidden onChange={handleFileChange} />
+                </Button>
+              </Box>
+            </Fade>
+          )}
+
+          {/* الزر الآن يستخدم خاصية disabled بشكل صحيح */}
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={onSignup}
+            disabled={isFormInvalid()} // سيبقى رمادياً حتى اكتمال البيانات
+            sx={{
+              py: 1.5,
+              fontWeight: 900,
+              fontSize: '1rem',
+              // تنسيق إضافي لضمان شكل احترافي وهو معطل
+              '&.Mui-disabled': {
+                bgcolor: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+              },
+            }}
+          >
+            JOIN AS {role.toUpperCase()}
+          </Button>
+
+          <Typography
+            onClick={onSwitch}
+            sx={{
+              cursor: 'pointer',
+              textAlign: 'center',
+              color: 'primary.main',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+            }}
+          >
+            Already a hero? Log in here
+          </Typography>
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
 

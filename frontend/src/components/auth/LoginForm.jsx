@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paper,
   Stack,
@@ -7,14 +7,30 @@ import {
   Button,
   InputAdornment,
   Box,
+  Alert,
 } from '@mui/material';
 import { Mail, Lock } from 'lucide-react';
 
 /**
- * Enhanced LoginForm using MUI components for better styling.
- * Connects with the global brand theme.
+ * LoginForm with Input Validation.
+ * Ensures fields are not empty before navigation.
  */
 const LoginForm = ({ onLogin, onSwitch }) => {
+  // Local state to manage input values
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(false);
+
+  // Validation logic before calling the onLogin prop
+  const handleLoginClick = () => {
+    if (email.trim() === '' || password.trim() === '') {
+      setError(true);
+    } else {
+      setError(false);
+      onLogin(); // Proceed only if validated
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -54,10 +70,19 @@ const LoginForm = ({ onLogin, onSwitch }) => {
             Welcome Back!
           </Typography>
 
+          {/* Alert shown when validation fails */}
+          {error && (
+            <Alert severity="error" sx={{ borderRadius: 2 }}>
+              Please fill in all fields!
+            </Alert>
+          )}
+
           <TextField
             fullWidth
             label="Email"
             placeholder="hero@arena.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -71,6 +96,8 @@ const LoginForm = ({ onLogin, onSwitch }) => {
             fullWidth
             label="Password"
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -83,7 +110,9 @@ const LoginForm = ({ onLogin, onSwitch }) => {
           <Button
             variant="contained"
             fullWidth
-            onClick={onLogin}
+            onClick={handleLoginClick}
+            // Disables the button visually if inputs are empty
+            disabled={!email.trim() || !password.trim()}
             sx={{ py: 1.5, fontWeight: 800, fontSize: '1rem' }}
           >
             LOG IN

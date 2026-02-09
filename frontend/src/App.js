@@ -1,9 +1,9 @@
 import React from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { ThemeProvider, CssBaseline, Container } from '@mui/material';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { ThemeProvider, CssBaseline, Container, Box } from '@mui/material';
 import theme from './theme';
 
-// Import your components
+// الاستيرادات الخاصة بكِ
 import Header from './components/layout/Header';
 import LoginForm from './components/auth/LoginForm';
 import SignupForm from './components/auth/SignupForm';
@@ -11,52 +11,64 @@ import MainDashboard from './components/layout/MainDashboard';
 
 export default function App() {
   const navigate = useNavigate();
-
-  // Mock XP for now
   const userXP = 1250;
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-
       <Routes>
-        {/* Auth Routes - No Header shown here */}
+        {/* بوابة الدخول: المسار الرئيسي */}
         <Route
           path="/"
           element={
             <Container maxWidth="md" sx={{ mt: 8 }}>
               <LoginForm
-                onLogin={() => navigate('/dashboard')}
+                // عند تسجيل الدخول، ننتقل للداشبورد ونستبدل التاريخ (Replace)
+                onLogin={() => navigate('/dashboard', { replace: true })}
                 onSwitch={() => navigate('/signup')}
               />
             </Container>
           }
         />
 
+        {/* صفحة التسجيل */}
         <Route
           path="/signup"
           element={
             <Container maxWidth="md" sx={{ mt: 8 }}>
               <SignupForm
-                onSignup={() => navigate('/dashboard')}
+                onSignup={() => navigate('/dashboard', { replace: true })}
                 onSwitch={() => navigate('/')}
               />
             </Container>
           }
         />
 
-        {/* Protected Dashboard Route - Shows Header */}
+        {/* صفحة الداشبورد المحمية */}
         <Route
           path="/dashboard"
           element={
-            <>
+            <Box
+              sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
               <Header userXP={userXP} />
-              <Container maxWidth="md" sx={{ mt: 4 }}>
+
+              {/* التغيير هنا: استبدلنا Container بـ Box 
+          وعطيناه width: 100% عشان ياخد الشاشة كاملة 
+      */}
+              <Box sx={{ width: '100%', mt: 4, flexGrow: 1, px: 0 }}>
                 <MainDashboard />
-              </Container>
-            </>
+              </Box>
+            </Box>
           }
         />
+
+        {/* في حال دخل المستخدم رابط غلط، نرجعه للـ Login */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ThemeProvider>
   );
