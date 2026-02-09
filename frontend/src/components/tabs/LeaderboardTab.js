@@ -9,9 +9,14 @@ import {
   Typography,
   Chip,
   Stack,
+  Box, // Box is now correctly imported
 } from '@mui/material';
 import { Trophy, Medal } from 'lucide-react';
 
+/**
+ * SkillArena Leaderboard Component
+ * Displays top users ranked by their earned XP.
+ */
 const LeaderboardTab = () => {
   // Mock data for the top players
   const topPlayers = [
@@ -22,6 +27,7 @@ const LeaderboardTab = () => {
 
   return (
     <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
+      {/* Header section with brand colors */}
       <Box sx={{ p: 3, bgcolor: 'primary.main', color: 'white' }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Trophy color="#FACA07" size={32} />
@@ -31,6 +37,7 @@ const LeaderboardTab = () => {
         </Stack>
       </Box>
 
+      {/* Rankings List */}
       <List sx={{ p: 0 }}>
         {topPlayers.map((player) => (
           <ListItem
@@ -47,6 +54,7 @@ const LeaderboardTab = () => {
                 <Avatar sx={{ bgcolor: 'grey.300', fontWeight: 800 }}>
                   {player.name[0]}
                 </Avatar>
+                {/* Visual rank indicator (Medal) */}
                 <Box sx={{ position: 'absolute', top: -10, left: -10 }}>
                   <Medal size={20} color={player.color} fill={player.color} />
                 </Box>
