@@ -1,45 +1,49 @@
 import React from 'react';
-import AISuggestions from '../courses/AISuggestions';
-import CourseCard from '../courses/CourseCard';
+import { Grid, Typography, Box } from '@mui/material';
+import CourseCard from './CourseCard';
 
 const CoursesTab = () => {
-  // Mock data for your courses
-  const courses = [
-    { id: 1, title: 'UI/UX FOUNDATIONS' },
-    { id: 2, title: 'REACT FOR HEROES' },
-    { id: 3, title: 'GAME LOGIC 101' },
+  // Mock data for courses
+  const coursesList = [
+    {
+      id: 1,
+      title: 'Introduction to React Hooks',
+      duration: '2h 30m',
+      lessons: 12,
+      xpReward: 150,
+      instructor: {
+        name: 'Asouma',
+        isTrusted: true,
+        avatar: '', // Placeholder
+      },
+    },
+    {
+      id: 2,
+      title: 'UI/UX Design Fundamentals',
+      duration: '4h 15m',
+      lessons: 20,
+      xpReward: 300,
+      instructor: {
+        name: 'Ahmad',
+        isTrusted: false,
+        avatar: '', // Placeholder
+      },
+    },
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Search & AI Section */}
-      <AISuggestions />
-
-      {/* Filter Buttons from your design */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          'All Tutors',
-          'Trusted Tutors',
-          'All Courses',
-          'Free Courses',
-          'Paid Courses',
-        ].map((filter) => (
-          <button
-            key={filter}
-            className="px-4 py-1.5 bg-[#FACA07] text-[#8A2D2E] text-[10px] font-black rounded-full hover:opacity-80 transition-all shadow-sm"
-          >
-            {filter.toUpperCase()}
-          </button>
+    <Box>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 900 }}>
+        Available Quests ⚔️
+      </Typography>
+      <Grid container spacing={3}>
+        {coursesList.map((course) => (
+          <Grid item xs={12} sm={6} key={course.id}>
+            <CourseCard course={course} />
+          </Grid>
         ))}
-      </div>
-
-      {/* Courses Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {courses.map((course) => (
-          <CourseCard key={course.id} title={course.title} />
-        ))}
-      </div>
-    </div>
+      </Grid>
+    </Box>
   );
 };
 

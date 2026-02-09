@@ -1,38 +1,43 @@
 import React from 'react';
+import { Box, Container, Stack, Typography, Chip, Avatar } from '@mui/material';
+import { User } from 'lucide-react';
 
-const Header = () => {
+const Header = ({ userXP }) => {
   return (
-    <div className="flex items-center justify-between p-4 bg-white/50 backdrop-blur-md border-b border-gray-100">
-      {/* User Profile Avatar - Leading side */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-[#FACA07] flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
-          {/* Placeholder for Hero Avatar */}
-          <svg
-            className="w-6 h-6 text-[#8A2D2E]"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-              clipRule="evenodd"
+    <Box
+      sx={{
+        bgcolor: '#fff',
+        p: 1.5,
+        borderBottom: '1px solid #FACA07',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}
+    >
+      <Container maxWidth="md">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography variant="h6" sx={{ fontWeight: 900, color: '#8A2D2E' }}>
+            SKILLARENA
+          </Typography>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {/* Display user experience points */}
+            <Chip
+              label={`${userXP} XP`}
+              color="secondary"
+              size="small"
+              sx={{ fontWeight: 800 }}
             />
-          </svg>
-        </div>
-      </div>
-
-      {/* Modern Search Bar - Center */}
-      <div className="relative w-1/2">
-        <input
-          type="text"
-          placeholder="what do you want to learn today?"
-          className="w-full py-2 px-4 rounded-full bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 ring-[#FACA07]/50 shadow-inner italic"
-        />
-      </div>
-
-      {/* Invisible spacer for balance */}
-      <div className="w-10"></div>
-    </div>
+            <Avatar sx={{ bgcolor: '#8A2D2E', width: 32, height: 32 }}>
+              <User size={18} />
+            </Avatar>
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
   );
 };
 

@@ -1,79 +1,109 @@
 import React from 'react';
+import {
+  Paper,
+  Stack,
+  Typography,
+  TextField,
+  Button,
+  InputAdornment,
+  Box,
+} from '@mui/material';
+import { Mail, Lock } from 'lucide-react';
 
-const LoginForm = ({ onSwitch, onLogin }) => {
+/**
+ * Enhanced LoginForm using MUI components for better styling.
+ * Connects with the global brand theme.
+ */
+const LoginForm = ({ onLogin, onSwitch }) => {
   return (
-    /* Glassmorphism container to match the sleek UI */
-    <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 animate-fade-in">
-      {/* Brand Identity - SKILLARENA */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-black italic tracking-tighter text-[#FACA07]">
-          SKILL<span className="text-[#8A2D2E]">ARENA</span>
-        </h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em] mt-1 uppercase">
-          Play • Learn • Earn
-        </p>
-      </div>
-
-      {/* Auth Toggle Tabs - Matching your Figma design */}
-      <div className="flex justify-center gap-2 mb-8">
-        <button className="px-6 py-1 text-xs font-bold rounded-full bg-[#FACA07] text-[#8A2D2E]">
-          Log in
-        </button>
-        <button
-          onClick={onSwitch}
-          className="px-6 py-1 text-xs font-bold rounded-full border border-[#FACA07] text-gray-400 hover:bg-[#FFF7D1] transition-colors"
-        >
-          Sign up
-        </button>
-      </div>
-
-      {/* Login Fields */}
-      <div className="space-y-5">
-        <div className="flex flex-col">
-          <label className="text-[10px] font-bold text-[#8A2D2E] mb-1.5 ml-1 uppercase">
-            Email
-          </label>
-          <input
-            type="email"
-            placeholder="hero@arena.com"
-            className="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 outline-none focus:ring-2 ring-[#FACA07] transition-all"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-[10px] font-bold text-[#8A2D2E] mb-1.5 ml-1 uppercase">
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            className="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 outline-none focus:ring-2 ring-[#FACA07] transition-all"
-          />
-          <span className="text-[10px] text-right mt-2 text-gray-400 cursor-pointer hover:text-[#8A2D2E] transition-colors">
-            Forgot password?
-          </span>
-        </div>
-      </div>
-
-      {/* Main Action Button - Royal Maroon */}
-      <button
-        onClick={onLogin}
-        className="w-full mt-8 py-4 bg-[#8A2D2E] text-white font-black rounded-xl shadow-lg hover:opacity-90 active:scale-95 transition-all tracking-widest text-lg"
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '60vh',
+      }}
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          borderRadius: 3,
+          width: '100%',
+          maxWidth: 400,
+          bgcolor: 'rgba(255, 255, 255, 0.9)',
+        }}
       >
-        LOG IN
-      </button>
+        <Stack spacing={3}>
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 900, color: 'primary.main' }}
+            >
+              SKILLARENA
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: 'text.secondary', letterSpacing: 1 }}
+            >
+              PLAY • LEARN • EARN
+            </Typography>
+          </Box>
 
-      {/* Footer Switch */}
-      <p className="mt-6 text-center text-[10px] font-bold text-gray-400 uppercase">
-        Don't have an account?{' '}
-        <span
-          onClick={onSwitch}
-          className="text-[#8A2D2E] cursor-pointer hover:underline ml-1"
-        >
-          Sign up for free
-        </span>
-      </p>
-    </div>
+          <Typography variant="h5" textAlign="center" sx={{ fontWeight: 800 }}>
+            Welcome Back!
+          </Typography>
+
+          <TextField
+            fullWidth
+            label="Email"
+            placeholder="hero@arena.com"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Mail size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock size={18} />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={onLogin}
+            sx={{ py: 1.5, fontWeight: 800, fontSize: '1rem' }}
+          >
+            LOG IN
+          </Button>
+
+          <Typography
+            onClick={onSwitch}
+            sx={{
+              cursor: 'pointer',
+              textAlign: 'center',
+              color: 'primary.main',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+            }}
+          >
+            Don't have an account? Sign up for free
+          </Typography>
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
 
