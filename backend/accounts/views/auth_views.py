@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from accounts.serializers.auth_serializers import LoginSerializer
-
+from rest_framework.authtoken.models import Token # استيراد المودل
 class LoginView(APIView):
     # مسموح للكل يوصل لهاد الرابط عشان يسجل دخول
     permission_classes = [permissions.AllowAny]
