@@ -12,14 +12,15 @@ class LoginView(APIView):
         return Response({"message": "يرجى إرسال بيانات الدخول عبر طلب POST"}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        # هون الكود الفعلي اللي بيتحقق من البيانات
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            return Response({
-                "message": "تم تسجيل الدخول بنجاح يا مروى!",
-                "username": user.username
-            }, status=status.HTTP_200_OK)
-        
-        # إذا البيانات غلط، بيرجع رسالة الخطأ اللي شفناها بالصورة الأولى
-        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        # جلب أو إنشاء التوكن الخاص بالمستخدم
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            "token": token.key, # هاد الرقم اللي بسومة رح تخزنه عندها
+            "username": user.username,
+            "message": "تم تسجيل الدخول بنجاح"
+        }, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
