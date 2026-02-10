@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // إضافة مكتبة axios للربط لاحقاً
+import axios from 'axios';
 import {
   Paper,
   Stack,
@@ -16,38 +16,68 @@ import {
 import { Mail, Lock, User, CloudUpload } from 'lucide-react';
 
 const SignupForm = ({ onSignup, onSwitch }) => {
-  // 1. تم تعديل الاسم من name إلى username ليتوافق مع الباك إند
   const [username, setUsername] = useState(''); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('learner');
   const [fileName, setFileName] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null); // لتخزين الملف الفعلي للرفع
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   // دالة التحقق من اكتمال الحقول
   const isFormInvalid = () => {
     const basicFieldsEmpty = !username.trim() || !email.trim() || !password.trim();
-    const tutorMissingFile = role === 'tutor' && !fileName;
+    const tutorMissingFile = role === 'tutor' && !selectedFile;
     return basicFieldsEmpty || tutorMissingFile;
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setFileName(e.target.files[0].name);
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file); // تخزين كائن الملف
+      setFileName(file.name); // تخزين الاسم للعرض فقط
     }
   };
 
-  // دالة إرسال البيانات (جاهزة للربط)
+  // دالة إرسال البيانات للباك إند
   const handleSignupClick = async () => {
     setLoading(true);
     setError('');
+
+    // استخدام FormData لأننا نرسل "ملف" مع البيانات
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('role', role);
+    
+    if (role === 'tutor' && selectedFile) {
+      formData.append('certificate', selectedFile); 
+    }
+
     try {
-      // هنا سيتم الربط مع رابط الـ Register في الباك إند لاحقاً
-      // await axios.post('http://127.0.0.1:8000/api/accounts/register/', { username, email, password, role });
-      onSignup(); 
+      // تم تحديث الرابط هنا ليتوافق مع مسار الباك إند الجديد
+      const response = await axios.post('http://127.0.0.1:8000/api/accounts/register/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // ضروري لرفع الملفات
+        },
+      });
+
+      if (response.status === 201) {
+        console.log('Welcome Hero! Quest Started ⚔️', response.data);
+        onSignup(); 
+      }
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      // عرض الأخطاء المحددة من الباك إند (مثل: اليوزر نيم مستخدم مسبقاً)
+      const serverErrors = err.response?.data;
+      setError(
+        serverErrors?.username?.[0] || 
+        serverErrors?.email?.[0] || 
+        serverErrors?.password?.[0] || 
+        serverErrors?.certificate?.[0] ||
+        'Hero creation failed. Please check your data!'
+      );
     } finally {
       setLoading(false);
     }
@@ -73,9 +103,8 @@ const SignupForm = ({ onSignup, onSwitch }) => {
             <ToggleButton value="tutor">TUTOR</ToggleButton>
           </ToggleButtonGroup>
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
 
-          {/* 2. تعديل الحقل هنا ليكون Username */}
           <TextField
             fullWidth
             label="Username"
@@ -83,26 +112,18 @@ const SignupForm = ({ onSignup, onSwitch }) => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <User size={18} />
-                </InputAdornment>
-              ),
+              startAdornment: ( <InputAdornment position="start"> <User size={18} /> </InputAdornment> ),
             }}
           />
 
           <TextField
             fullWidth
             label="Email"
-            placeholder="Enter your email"
+            placeholder="hero@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Mail size={18} />
-                </InputAdornment>
-              ),
+              startAdornment: ( <InputAdornment position="start"> <Mail size={18} /> </InputAdornment> ),
             }}
           />
 
@@ -110,15 +131,11 @@ const SignupForm = ({ onSignup, onSwitch }) => {
             fullWidth
             label="Password"
             type="password"
-            placeholder="Create a strong password"
+            placeholder="8+ chars (Letters & Numbers)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock size={18} />
-                </InputAdornment>
-              ),
+              startAdornment: ( <InputAdornment position="start"> <Lock size={18} /> </InputAdornment> ),
             }}
           />
 
@@ -136,8 +153,8 @@ const SignupForm = ({ onSignup, onSwitch }) => {
                     borderColor: fileName ? 'success.main' : 'primary.main',
                   }}
                 >
-                  {fileName ? `CERT: ${fileName.substring(0, 15)}...` : 'UPLOAD CERTIFICATE'}
-                  <input type="file" hidden onChange={handleFileChange} />
+                  {fileName ? `CERT: ${fileName.substring(0, 15)}...` : 'UPLOAD CERTIFICATE (PDF/WORD)'}
+                  <input type="file" hidden onChange={handleFileChange} accept=".pdf,.doc,.docx" />
                 </Button>
               </Box>
             </Fade>

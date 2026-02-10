@@ -23,7 +23,7 @@ const LoginForm = ({ onLogin, onSwitch }) => {
     setError('');
 
     try {
-      // التعديل السحري: الربط على السيرفر المحلي (localhost) بما أنك فاتحة الاثنين سوا
+      // تم تحديث الرابط هنا ليتوافق مع التنظيم الجديد للمسارات
       const response = await axios.post('http://127.0.0.1:8000/api/accounts/login/', {
         username: username,
         password: password,
@@ -32,13 +32,13 @@ const LoginForm = ({ onLogin, onSwitch }) => {
       if (response.status === 200) {
         console.log('Welcome Back, Hero! ⚔️', response.data);
         
-        // حفظ التوكن في المتصفح (مهم جداً لاستمرار الجلسة)
+        // حفظ التوكن في المتصفح لضمان بقاء الجلسة مفتوحة
         localStorage.setItem('token', response.data.token);
         
         onLogin();
       }
     } catch (err) {
-      // استلام رسائل الخطأ من الباك إند وعرضها
+      // استلام رسائل الخطأ من الباك إند وعرضها بشكل واضح
       setError(
         err.response?.data?.non_field_errors?.[0] || 
         err.response?.data?.message || 
