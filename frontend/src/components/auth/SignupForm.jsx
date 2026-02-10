@@ -21,11 +21,10 @@ const SignupForm = ({ onSignup, onSwitch }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('learner');
   const [fileName, setFileName] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null); // لتخزين الملف الفعلي للرفع
+  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // دالة التحقق من اكتمال الحقول
   const isFormInvalid = () => {
     const basicFieldsEmpty = !username.trim() || !email.trim() || !password.trim();
     const tutorMissingFile = role === 'tutor' && !selectedFile;
@@ -35,17 +34,15 @@ const SignupForm = ({ onSignup, onSwitch }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedFile(file); // تخزين كائن الملف
-      setFileName(file.name); // تخزين الاسم للعرض فقط
+      setSelectedFile(file);
+      setFileName(file.name);
     }
   };
 
-  // دالة إرسال البيانات للباك إند
   const handleSignupClick = async () => {
     setLoading(true);
     setError('');
 
-    // استخدام FormData لأننا نرسل "ملف" مع البيانات
     const formData = new FormData();
     formData.append('username', username);
     formData.append('email', email);
@@ -57,25 +54,28 @@ const SignupForm = ({ onSignup, onSwitch }) => {
     }
 
     try {
-      // تم تحديث الرابط هنا ليتوافق مع مسار الباك إند الجديد
-      const response = await axios.post('http://127.0.0.1:8000/api/accounts/register/', formData, {
+      // --- التعديل الجذري هنا: الرابط الجديد ليطابق تنظيمك يا مروحة ---
+      const response = await axios.post('http://127.0.0.1:8000/api/accounts/auth/signup/', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data', // ضروري لرفع الملفات
+          'Content-Type': 'multipart/form-data',
         },
       });
 
       if (response.status === 201) {
         console.log('Welcome Hero! Quest Started ⚔️', response.data);
+        // حفظ التوكن لو الباك إند أرسله فوراً مع التسجيل لضمان الدخول التلقائي
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+        }
         onSignup(); 
       }
     } catch (err) {
-      // عرض الأخطاء المحددة من الباك إند (مثل: اليوزر نيم مستخدم مسبقاً)
+      // استلام رسائل الخطأ الدقيقة من السيرفر حق مروحة
       const serverErrors = err.response?.data;
       setError(
+        serverErrors?.error || // للرسائل العامة التي أضفناها في signup_hero
         serverErrors?.username?.[0] || 
         serverErrors?.email?.[0] || 
-        serverErrors?.password?.[0] || 
-        serverErrors?.certificate?.[0] ||
         'Hero creation failed. Please check your data!'
       );
     } finally {
