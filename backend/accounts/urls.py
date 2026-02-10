@@ -1,12 +1,12 @@
 from django.urls import path
-# استيراد الـ Views من الملفات المنفصلة
-from accounts.views.auth_views import LoginView
-from accounts.views.signup_view import RegisterView
+from .views.auth_views import CustomAuthToken
+from .views.signup_view import signup_hero
+from .views.profile_view import user_profile # تأكدي من هذا الاستيراد
 
 urlpatterns = [
-    # Login path - For your 'admin' and 'admin2' heroes
-    path('login/', LoginView.as_view(), name='login'),
+    path('auth/login/', CustomAuthToken.as_view(), name='login'),
+    path('auth/signup/', signup_hero, name='signup'),
     
-    # Signup path - For new heroes (Learners and Tutors)
-    path('register/', RegisterView.as_view(), name='register'),
+    # هذا هو السطر اللي بيشغل الداشبورد الذهبية يا مروحة
+    path('profile/', user_profile, name='user-profile'), 
 ]
