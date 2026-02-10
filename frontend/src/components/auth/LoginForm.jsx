@@ -23,8 +23,8 @@ const LoginForm = ({ onLogin, onSwitch }) => {
     setError('');
 
     try {
-      // تم تحديث الرابط هنا ليتوافق مع التنظيم الجديد للمسارات
-      const response = await axios.post('http://127.0.0.1:8000/api/accounts/login/', {
+      // --- التعديل هنا: أضفنا /auth/ ليطابق مسارات الباك إند عندك يا مروحة ---
+      const response = await axios.post('http://127.0.0.1:8000/api/accounts/auth/login/', {
         username: username,
         password: password,
       });
@@ -40,8 +40,8 @@ const LoginForm = ({ onLogin, onSwitch }) => {
     } catch (err) {
       // استلام رسائل الخطأ من الباك إند وعرضها بشكل واضح
       setError(
+        err.response?.data?.error || 
         err.response?.data?.non_field_errors?.[0] || 
-        err.response?.data?.message || 
         'Hero not found or wrong password!'
       );
     } finally {

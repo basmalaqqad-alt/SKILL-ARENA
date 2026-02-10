@@ -1,25 +1,26 @@
-from rest_framework.views import APIView
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from accounts.serializers.auth_serializers import LoginSerializer
-from rest_framework.authtoken.models import Token 
+from django.contrib.auth.models import User
 
-class LoginView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        return Response({"message": "يرجى إرسال بيانات الدخول عبر طلب POST"}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                "token": token.key,
-                "username": user.username,
-                "message": "تم تسجيل الدخول بنجاح يا مروى!"
-            }, status=status.HTTP_200_OK)
+# الكلاس المسؤول عن تسجيل دخول الأبطال وتوليد التوكن
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        # التحقق من صحة اسم المستخدم وكلمة المرور
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         
-        # هاد السطر لازم يكون تحت الـ if تماماً (جوا الدالة)
-        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+        if not serializer.is_valid():
+            return Response({'error': 'Hero not found or wrong password!'}, status=400)
+            
+        user = serializer.validated_data['user']
+        
+        # جلب التوكن الحالي أو إنشاء واحد جديد إذا لم يوجد
+        token, created = Token.objects.get_or_create(user=user)
+        
+        # إرسال البيانات للواجهة (React) ليظهر اسمك في البروفايل
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+            'email': user.email,
+            'username': user.username
+        })
