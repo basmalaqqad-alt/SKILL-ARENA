@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import {
   Paper,
   Stack,
@@ -9,25 +10,36 @@ import {
   Box,
   Alert,
 } from '@mui/material';
-import { Mail, Lock } from 'lucide-react';
+import { User, Lock } from 'lucide-react'; // استبدلنا Mail بـ User
 
-/**
- * LoginForm with Input Validation.
- * Ensures fields are not empty before navigation.
- */
 const LoginForm = ({ onLogin, onSwitch }) => {
-  // Local state to manage input values
-  const [email, setEmail] = useState('');
+  // 1. غيرنا الـ State من email لـ username
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Validation logic before calling the onLogin prop
-  const handleLoginClick = () => {
-    if (email.trim() === '' || password.trim() === '') {
-      setError(true);
-    } else {
-      setError(false);
-      onLogin(); // Proceed only if validated
+  const handleLoginClick = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // 2. إرسال username بدلاً من email لمروحة
+      const response = await axios.post('http://localhost:8000/api/login/', {
+        username: username,
+        password: password,
+      });
+
+      if (response.status === 200) {
+        console.log('Welcome Back, Hero! ⚔️', response.data);
+        onLogin();
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || 'Hero not found or wrong password!'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,26 +79,26 @@ const LoginForm = ({ onLogin, onSwitch }) => {
           </Box>
 
           <Typography variant="h5" textAlign="center" sx={{ fontWeight: 800 }}>
-            Welcome Back!
+            Hero Login
           </Typography>
 
-          {/* Alert shown when validation fails */}
           {error && (
             <Alert severity="error" sx={{ borderRadius: 2 }}>
-              Please fill in all fields!
+              {error}
             </Alert>
           )}
 
+          {/* 3. تعديل حقل الإدخال ليناسب اليوزر نيم */}
           <TextField
             fullWidth
-            label="Email"
-            placeholder="hero@arena.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            label="Username"
+            placeholder="Enter your hero name"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Mail size={18} />
+                  <User size={18} />
                 </InputAdornment>
               ),
             }}
@@ -111,11 +123,10 @@ const LoginForm = ({ onLogin, onSwitch }) => {
             variant="contained"
             fullWidth
             onClick={handleLoginClick}
-            // Disables the button visually if inputs are empty
-            disabled={!email.trim() || !password.trim()}
+            disabled={!username.trim() || !password.trim() || loading}
             sx={{ py: 1.5, fontWeight: 800, fontSize: '1rem' }}
           >
-            LOG IN
+            {loading ? 'AUTHENTICATING...' : 'LOG IN'}
           </Button>
 
           <Typography
@@ -128,7 +139,7 @@ const LoginForm = ({ onLogin, onSwitch }) => {
               fontSize: '0.85rem',
             }}
           >
-            Don't have an account? Sign up for free
+            New hero? Sign up for free
           </Typography>
         </Stack>
       </Paper>
