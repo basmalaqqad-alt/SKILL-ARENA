@@ -1,16 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User # استدعاء جدول المستخدمين
+from django.conf import settings # استدعاء الإعدادات لاستخدام الموديل الجديد
 
-class Skill(models.Model): # تأكدي إن الكلمة تبدأ بحرف S كبير
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    level = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
-    
-class Skill(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='skills') # ربط المهارة بالمستخدم
+class Skill(models.Model): 
+    # التعديل الأهم: ربط المهارة بالمستخدم المخصص عبر settings
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='skills'
+    )
     title = models.CharField(max_length=100)
     description = models.TextField()
     level = models.CharField(max_length=50)

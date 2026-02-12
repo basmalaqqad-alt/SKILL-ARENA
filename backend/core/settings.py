@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # Build paths inside the project
@@ -107,3 +108,11 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+AUTH_USER_MODEL = 'accounts.User'
+# --- إعدادات ملفات الميديا (الشهادات والصور) ---
+
+# الرابط الذي سيستخدمه المتصفح للوصول للملف
+MEDIA_URL = '/media/' 
+
+# المكان الفيزيائي للمجلد على جهازك
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
