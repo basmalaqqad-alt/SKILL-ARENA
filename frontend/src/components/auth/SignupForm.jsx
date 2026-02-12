@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Paper,
   Stack,
@@ -16,10 +17,11 @@ import {
 import { Mail, Lock, User, CloudUpload } from 'lucide-react';
 
 const SignupForm = ({ onSignup, onSwitch }) => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState(''); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('learner');
+  const [role, setRole] = useState('learner'); // هاد هو المفتاح الحقيقي للتوجيه
   const [fileName, setFileName] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,6 @@ const SignupForm = ({ onSignup, onSwitch }) => {
     }
 
     try {
-      // --- التعديل الجذري هنا: الرابط الجديد ليطابق تنظيمك يا مروحة ---
       const response = await axios.post('http://127.0.0.1:8000/api/accounts/auth/signup/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -63,17 +64,22 @@ const SignupForm = ({ onSignup, onSwitch }) => {
 
       if (response.status === 201) {
         console.log('Welcome Hero! Quest Started ⚔️', response.data);
-        // حفظ التوكن لو الباك إند أرسله فوراً مع التسجيل لضمان الدخول التلقائي
+
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
         }
-        onSignup(); 
+
+        // حفظ الدور محلياً ثم إخطار الـ App ليتولى التوجيه المركزي
+        const chosenRole = (role || 'learner').toLowerCase().trim();
+        localStorage.setItem('role', chosenRole);
+
+        // نمرّر الدور إلى الـ parent ليقوم بالتوجيه (handleAuthSuccess)
+        onSignup(chosenRole);
       }
     } catch (err) {
-      // استلام رسائل الخطأ الدقيقة من السيرفر حق مروحة
       const serverErrors = err.response?.data;
       setError(
-        serverErrors?.error || // للرسائل العامة التي أضفناها في signup_hero
+        serverErrors?.error || 
         serverErrors?.username?.[0] || 
         serverErrors?.email?.[0] || 
         'Hero creation failed. Please check your data!'
