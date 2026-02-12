@@ -23,22 +23,36 @@ const LoginForm = ({ onLogin, onSwitch }) => {
     setError('');
 
     try {
-      // --- التعديل هنا: أضفنا /auth/ ليطابق مسارات الباك إند عندك يا مروحة ---
       const response = await axios.post('http://127.0.0.1:8000/api/accounts/auth/login/', {
         username: username,
         password: password,
       });
 
       if (response.status === 200) {
-        console.log('Welcome Back, Hero! ⚔️', response.data);
+        // --- كاشف الأعطال: افتحي الـ Console وشوفي شو يطبع هنا ---
+        console.log('Backend Response Data:', response.data);
         
-        // حفظ التوكن في المتصفح لضمان بقاء الجلسة مفتوحة
-        localStorage.setItem('token', response.data.token);
+        // التأكد من استخراج البيانات الصحيحة
+        const token = response.data.token || response.data.key; 
+        const role = response.data.role || response.data.user_type; 
+
+        if (!role) {
+          console.error("CRITICAL: Role is missing in response!");
+          setError("Technical error: Role not received from server.");
+          return;
+        }
+
+        // حفظ البيانات في الذاكرة
+        localStorage.setItem('token', token);
+        localStorage.setItem('role', role.toLowerCase().trim()); 
         
-        onLogin();
+        console.log('Login Success! Role detected:', role);
+        
+        // التوجيه التلقائي للأب
+        onLogin(role.toLowerCase().trim()); 
       }
     } catch (err) {
-      // استلام رسائل الخطأ من الباك إند وعرضها بشكل واضح
+      console.error("Login Error:", err.response?.data);
       setError(
         err.response?.data?.error || 
         err.response?.data?.non_field_errors?.[0] || 
@@ -65,7 +79,6 @@ const LoginForm = ({ onLogin, onSwitch }) => {
           <TextField
             fullWidth
             label="Username"
-            placeholder="Enter your hero name"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             InputProps={{
@@ -77,7 +90,6 @@ const LoginForm = ({ onLogin, onSwitch }) => {
             fullWidth
             label="Password"
             type="password"
-            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             InputProps={{
@@ -90,7 +102,7 @@ const LoginForm = ({ onLogin, onSwitch }) => {
             fullWidth
             onClick={handleLoginClick}
             disabled={!username.trim() || !password.trim() || loading}
-            sx={{ py: 1.5, fontWeight: 800, fontSize: '1rem' }}
+            sx={{ py: 1.5, fontWeight: 800 }}
           >
             {loading ? 'AUTHENTICATING...' : 'LOG IN'}
           </Button>

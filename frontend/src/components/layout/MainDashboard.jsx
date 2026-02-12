@@ -1,16 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  Fade,
-} from '@mui/material';
-import { BookOpen, Trophy, User, Sparkles, BrainCircuit } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Fade } from '@mui/material';
+import { BookOpen, Trophy, User, Sparkles, BrainCircuit, GraduationCap, ClipboardList } from 'lucide-react';
 
 import AboutTab from '../tabs/AboutTab';
 import CoursesTab from '../tabs/CoursesTab';
@@ -18,122 +10,81 @@ import LeaderboardTab from '../tabs/LeaderboardTab';
 import ProfileTab from '../tabs/ProfileTab';
 import AITab from '../tabs/AITab';
 
-const MainDashboard = () => {
+const MainDashboard = ({ role }) => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState(0);
   const [profileData, setProfileData] = useState(null);
 
-  // --- الربط الحقيقي مع الباك إند حق مروحة (تم وضعه داخل المكون صح) ---
+  // إجبار النظام على قراءة الرابط أولاً
+  const currentRole = useMemo(() => {
+    const pathRole = location.pathname.includes('tutor') ? 'tutor' : location.pathname.includes('learner') ? 'learner' : null;
+    const finalRole = pathRole || role || localStorage.getItem('role') || 'learner';
+    
+    console.log("DEBUG: Final Dashboard Role ->", finalRole);
+    return finalRole;
+  }, [location.pathname, role]);
+
   useEffect(() => {
     const fetchHeroData = async () => {
       try {
         const token = localStorage.getItem('token');
-        // التأكد من أن السيرفر شغال عندك على بورت 8000
         const response = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
           headers: { 'Authorization': `Token ${token}` }
         });
-        setProfileData(response.data); 
-      } catch (err) {
-        console.error("خطأ في الاتصال بالسيرفر، سيتم عرض البيانات الافتراضية", err);
-      }
+        setProfileData(response.data);
+      } catch (err) { console.error("Profile fetch error", err); }
     };
     fetchHeroData();
   }, []);
 
-  const menuItems = [
-    {
-      label: 'LEARN',
-      icon: <BookOpen size={24} />,
-      component: <AboutTab />,
-    },
-    {
-      label: 'AI INSIGHTS',
-      icon: <BrainCircuit size={24} />,
-      component: <AITab userName={profileData?.username || "عسومة البطلة"} />,
-    },
-    {
-      label: 'COURSES',
-      icon: <Sparkles size={24} />,
-      component: <CoursesTab />,
-    },
-    {
-      label: 'LEADERBOARDS',
-      icon: <Trophy size={24} />,
-      component: <LeaderboardTab />,
-    },
-    {
-      label: 'PROFILE',
-      icon: <User size={24} />,
-      component: <ProfileTab 
-        userName={profileData?.username || "عسومة البطلة"} 
-        userXP={profileData?.experience || 1250}
-        stats={profileData}
-        rank_name={profileData?.rank_name || "WARRIOR"}
-        progress_percentage={profileData?.progress_percentage || 0}
-      />,
-    },
-  ];
+  const menuItems = useMemo(() => {
+    const common = [
+      { label: 'PROFILE', icon: <User size={24} />, component: <ProfileTab userName={profileData?.username} stats={profileData} /> },
+      { label: 'AI INSIGHTS', icon: <BrainCircuit size={24} />, component: <AITab userName={profileData?.username} /> },
+    ];
+
+    if (currentRole === 'tutor') {
+      return [
+        { label: 'SKILLS MANAGEMENT', icon: <ClipboardList size={24} />, component: <Typography variant="h4" sx={{ fontWeight: 900 }}>Manage Your Skills & Students 🛡️</Typography> },
+        { label: 'MY STUDENTS', icon: <GraduationCap size={24} />, component: <Typography variant="h6" sx={{ p: 3 }}>Students Tracker</Typography> },
+        ...common
+      ];
+    }
+    return [
+      { label: 'LEARN', icon: <BookOpen size={24} />, component: <AboutTab /> },
+      { label: 'COURSES', icon: <Sparkles size={24} />, component: <CoursesTab /> },
+      { label: 'LEADERBOARDS', icon: <Trophy size={24} />, component: <LeaderboardTab /> },
+      ...common
+    ];
+  }, [currentRole, profileData]);
+
+  useEffect(() => { setActiveTab(0); }, [currentRole]);
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        minHeight: '80vh',
-        gap: 4,
-        px: { xs: 2, md: 8, lg: 3 },
-        width: '100%',
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* السايد بار - تصميم بسومة الأصلي */}
-      <Box
-        sx={{
-          width: 240,
-          borderRight: '2px solid rgba(138, 45, 46, 0.1)',
-          pr: 2,
-          display: { xs: 'none', md: 'block' },
-        }}
-      >
-        <Box sx={{ p: 2, mb: 3, mt: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <img src="/logo.png" alt="SkillArena Logo" style={{ maxWidth: '200px', height: 'auto', marginBottom: '12px' }} />
-          <Typography variant="h6" sx={{ fontWeight: 900, color: 'primary.main', fontSize: '1rem', textAlign: 'center' }}>
-            PLAY • LEARN • EARN
+    <Box sx={{ display: 'flex', minHeight: '80vh', gap: 4, px: { xs: 2, md: 8, lg: 3 }, width: '100%' }}>
+      <Box sx={{ width: 240, borderRight: '2px solid rgba(138, 45, 46, 0.1)', pr: 2 }}>
+        <Box sx={{ p: 2, mb: 3, textAlign: 'center' }}>
+          <img src="/logo.png" alt="Logo" style={{ maxWidth: '180px' }} />
+          <Typography variant="h6" sx={{ fontWeight: 900, color: 'primary.main', fontSize: '0.8rem' }}>
+             {currentRole === 'tutor' ? 'TUTOR ARENA • MASTER' : 'LEARNER QUEST • HERO'}
           </Typography>
         </Box>
-
-        <List spacing={1}>
+        <List>
           {menuItems.map((item, index) => (
             <ListItem key={item.label} disablePadding sx={{ mb: 1 }}>
-              <ListItemButton
-                onClick={() => setActiveTab(index)}
-                selected={activeTab === index}
-                sx={{
-                  borderRadius: 3,
-                  py: 1.5,
-                  '&.Mui-selected': {
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '& .MuiListItemIcon-root': { color: 'white' },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 45, color: activeTab === index ? 'white' : 'primary.main' }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 800, fontSize: '0.9rem' }} />
+              <ListItemButton onClick={() => setActiveTab(index)} selected={activeTab === index} sx={{ borderRadius: 2 }}>
+                <ListItemIcon sx={{ color: activeTab === index ? 'white' : 'primary.main' }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 800, fontSize: '0.8rem' }} />
               </ListItemButton>
             </ListItem>
           ))}
         </List>
       </Box>
-
-      {/* منطقة المحتوى */}
       <Box sx={{ flexGrow: 1, pl: 4 }}>
-        <Fade in key={activeTab} timeout={400}>
+        <Fade in key={activeTab + currentRole} timeout={400}>
           <Box>
-            <Typography variant="h4" sx={{ mb: 3, fontWeight: 900, color: 'primary.main' }}>
-              {menuItems[activeTab].label}
-            </Typography>
-            {menuItems[activeTab].component}
+            <Typography variant="h4" sx={{ mb: 1, fontWeight: 900, color: 'primary.main' }}>{menuItems[activeTab]?.label}</Typography>
+            {menuItems[activeTab]?.component}
           </Box>
         </Fade>
       </Box>

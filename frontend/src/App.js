@@ -3,7 +3,6 @@ import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Container, Box } from '@mui/material';
 import theme from './theme';
 
-// الاستيرادات الخاصة بكِ
 import Header from './components/layout/Header';
 import LoginForm from './components/auth/LoginForm';
 import SignupForm from './components/auth/SignupForm';
@@ -13,61 +12,43 @@ export default function App() {
   const navigate = useNavigate();
   const userXP = 1250;
 
+  const handleAuthSuccess = (role) => {
+    // كاشف أعطال: افتحي الـ Console (F12) وشوفي وش يطبع
+    console.log("DEBUG: Role received from Login ->", role);
+    
+    const cleanRole = String(role).toLowerCase().trim();
+    localStorage.setItem('role', cleanRole);
+
+    // توجيه فوري ومباشر
+    if (cleanRole === 'tutor') {
+      navigate('/tutor-dashboard', { replace: true });
+    } else {
+      navigate('/learner-dashboard', { replace: true });
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Routes>
-        {/* بوابة الدخول: المسار الرئيسي */}
-        <Route
-          path="/"
-          element={
-            <Container maxWidth="md" sx={{ mt: 8 }}>
-              <LoginForm
-                // عند تسجيل الدخول، ننتقل للداشبورد ونستبدل التاريخ (Replace)
-                onLogin={() => navigate('/dashboard', { replace: true })}
-                onSwitch={() => navigate('/signup')}
-              />
-            </Container>
-          }
-        />
+        <Route path="/" element={<Container maxWidth="md" sx={{ mt: 8 }}><LoginForm onLogin={handleAuthSuccess} onSwitch={() => navigate('/signup')} /></Container>} />
+        <Route path="/signup" element={<Container maxWidth="md" sx={{ mt: 8 }}><SignupForm onSignup={handleAuthSuccess} onSwitch={() => navigate('/')} /></Container>} />
 
-        {/* صفحة التسجيل */}
-        <Route
-          path="/signup"
-          element={
-            <Container maxWidth="md" sx={{ mt: 8 }}>
-              <SignupForm
-                onSignup={() => navigate('/dashboard', { replace: true })}
-                onSwitch={() => navigate('/')}
-              />
-            </Container>
-          }
-        />
+        {/* واجهة التيوتر اللي زبطت يدوي */}
+        <Route path="/tutor-dashboard" element={
+          <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Header userXP={userXP} />
+            <Box sx={{ width: '100%', mt: 4, flexGrow: 1 }}><MainDashboard role="tutor" /></Box>
+          </Box>
+        } />
 
-        {/* صفحة الداشبورد المحمية */}
-        <Route
-          path="/dashboard"
-          element={
-            <Box
-              sx={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Header userXP={userXP} />
+        <Route path="/learner-dashboard" element={
+          <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Header userXP={userXP} />
+            <Box sx={{ width: '100%', mt: 4, flexGrow: 1 }}><MainDashboard role="learner" /></Box>
+          </Box>
+        } />
 
-              {/* التغيير هنا: استبدلنا Container بـ Box 
-          وعطيناه width: 100% عشان ياخد الشاشة كاملة 
-      */}
-              <Box sx={{ width: '100%', mt: 4, flexGrow: 1, px: 0 }}>
-                <MainDashboard />
-              </Box>
-            </Box>
-          }
-        />
-
-        {/* في حال دخل المستخدم رابط غلط، نرجعه للـ Login */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ThemeProvider>

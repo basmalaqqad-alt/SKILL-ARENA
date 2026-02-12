@@ -17,10 +17,14 @@ class CustomAuthToken(ObtainAuthToken):
         # جلب التوكن الحالي أو إنشاء واحد جديد إذا لم يوجد
         token, created = Token.objects.get_or_create(user=user)
         
-        # إرسال البيانات للواجهة (React) ليظهر اسمك في البروفايل
+        # تحديد الدور إذا تم حفظه عند التسجيل (نستخدم first_name كخيار سريع وخفيف)
+        role = getattr(user, 'first_name', '') or 'learner'
+
+        # إرسال البيانات للواجهة (React) ليظهر اسمك في البروفايل ويعرف الواجهة المناسبة
         return Response({
             'token': token.key,
             'user_id': user.pk,
             'email': user.email,
-            'username': user.username
+            'username': user.username,
+            'role': role
         })
