@@ -1,10 +1,11 @@
 import re
 from rest_framework import serializers
-from django.contrib.auth.models import User
+# تأكدي أن هذا الاستيراد يشير إلى المودل المخصص في تطبيقك وليس الافتراضي
+from accounts.models import User 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    # Additional fields for SkillArena roles
-    role = serializers.CharField(write_only=True)
+    # إضافة الحقول الإضافية لتعمل مع نظام الأدوار في SkillArena
+    role = serializers.CharField(write_only=True, required=True)
     certificate = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
@@ -16,19 +17,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate_username(self, value):
-        # Check if the username is already taken in the database
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("This username is already taken.")
         return value
 
     def validate_email(self, value):
-        # Check if the email is already registered
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
 
     def validate_password(self, value):
-        # Ensure password is at least 8 characters and contains letters and numbers
         if len(value) < 8:
             raise serializers.ValidationError("Password must be at least 8 characters long.")
         if not re.search(r"[a-z]", value) or not re.search(r"\d", value):
@@ -36,7 +34,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_certificate(self, value):
-        # Restrict file uploads to PDF and Word documents only
         if value:
             extension = value.name.split('.')[-1].lower()
             if extension not in ['pdf', 'doc', 'docx']:
@@ -44,10 +41,21 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Create a new user with an encrypted password
+        # 1. استخراج البيانات الإضافية قبل إنشاء المستخدم
+        role = validated_data.get('role', 'learner')
+        certificate = validated_data.get('certificate', None)
+
+        # 2. إنشاء المستخدم وحفظ كلمة المرور مشفرة
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password']
         )
+
+        # 3. إسناد الدور والشهادة للمستخدم الجديد
+        user.role = role
+        if certificate:
+            user.certificate = certificate
+        
+        user.save()
         return user

@@ -6,6 +6,28 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
+        from rest_framework import serializers
+from django.contrib.auth import authenticate
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        username = data.get('username')
+        password = data.get('password')
+
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if not user:
+                raise serializers.ValidationError("بيانات الدخول غير صحيحة")
+        else:
+            raise serializers.ValidationError("يجب إدخال اسم المستخدم وكلمة المرور")
+
+        # التعديل هنا: إضافة المستخدم والـ role الخاص به للبيانات المعادة
+        data['user'] = user
+        data['role'] = user.role  # هذا السطر مهم لكي تعرف React نوع الحساب
+        return data
         username = data.get('username')
         password = data.get('password')
 
