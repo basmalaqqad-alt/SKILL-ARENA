@@ -48,7 +48,7 @@ const MainDashboard = () => {
     {
       label: 'AI INSIGHTS',
       icon: <BrainCircuit size={24} />,
-      component: <AITab userName={profileData?.username || "عسومة البطلة"} />,
+      component: <AITab userName={profileData?.username || localStorage.getItem('username') || "HERO"} />,
     },
     {
       label: 'COURSES',
@@ -64,7 +64,7 @@ const MainDashboard = () => {
       label: 'PROFILE',
       icon: <User size={24} />,
       component: <ProfileTab 
-        userName={profileData?.username || "عسومة البطلة"} 
+        userName={profileData?.username || localStorage.getItem('username') || "HERO"} 
         userXP={profileData?.experience || 1250}
         stats={profileData}
         rank_name={profileData?.rank_name || "WARRIOR"}

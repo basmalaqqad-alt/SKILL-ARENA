@@ -69,9 +69,12 @@ const SignupForm = ({ onSignup, onSwitch }) => {
       if (response.status === 201) {
         console.log('Welcome Hero! Quest Started ⚔️', response.data);
 
-        // حفظ التوكن والدور لكي يتعرف عليهما App.js فوراً
+        // حفظ التوكن والدور واسم المستخدم لكي يتعرف عليهما App.js فوراً
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
+        }
+        if (response.data.username) {
+          localStorage.setItem('username', response.data.username);
         }
         // هذا السطر هو الذي سيفتح لكِ صفحة التيوتر فوراً بعد الساين اب
         localStorage.setItem('role', response.data.role || role);
