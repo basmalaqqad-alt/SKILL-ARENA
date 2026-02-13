@@ -59,9 +59,10 @@ export default function App() {
                 minHeight: '100vh',
                 display: 'flex',
                 flexDirection: 'column',
+                bgcolor: localStorage.getItem('role') === 'tutor' ? '#F8F4DF' : undefined,
               }}
             >
-              <Header userXP={userXP} />
+              <Header userXP={userXP} isTutor={localStorage.getItem('role') === 'tutor'} />
               <Box sx={{ width: '100%', mt: 4, flexGrow: 1 }}>
                 {renderDashboard()}{' '}
                 {/* هنا السحر: استدعاء الدالة التي تقرر المحتوى */}
