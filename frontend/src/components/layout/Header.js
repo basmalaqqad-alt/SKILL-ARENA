@@ -1,39 +1,39 @@
 import React from 'react';
-import { Box, Container, Stack, Typography, Chip, Avatar } from '@mui/material';
-import { User } from 'lucide-react';
+import { Box, Container, Stack, Typography, Chip, Avatar, Tooltip } from '@mui/material';
+import { User, ShieldCheck } from 'lucide-react';
 
-const Header = ({ userXP, isTutor }) => {
+const Header = ({ userXP, avatarUrl, isTutor, isTrustedTutor }) => {
   const cream = '#F8F4DF';
   return (
     <Box
       sx={{
-        bgcolor: isTutor ? cream : '#fff',
+        bgcolor: cream,
         p: 1.5,
-        borderBottom: `1px solid ${isTutor ? 'rgba(154, 47, 46, 0.2)' : '#FACA07'}`,
+        borderBottom: '1px solid rgba(154, 47, 46, 0.2)',
         position: 'sticky',
         top: 0,
         zIndex: 10,
       }}
     >
       <Container maxWidth="md">
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography variant="h6" sx={{ fontWeight: 900, color: isTutor ? '#9A2F2E' : '#8A2D2E' }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" sx={{ fontWeight: 900, color: '#9A2F2E' }}>
             SKILLARENA
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
-            {/* Display user experience points */}
-            <Chip
-              label={`${userXP} XP`}
-              color="secondary"
-              size="small"
-              sx={{ fontWeight: 800 }}
-            />
-            <Avatar sx={{ bgcolor: '#8A2D2E', width: 32, height: 32 }}>
-              <User size={18} />
+            <Chip label={`${userXP} XP`} color="secondary" size="small" sx={{ fontWeight: 800 }} />
+            {isTutor && isTrustedTutor && (
+              <Tooltip title="Trusted Tutor – Verified certificate">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ShieldCheck size={22} color="#9A2F2E" />
+                </Box>
+              </Tooltip>
+            )}
+            <Avatar
+              src={avatarUrl || undefined}
+              sx={{ bgcolor: '#9A2F2E', width: 36, height: 36 }}
+            >
+              {!avatarUrl && <User size={20} />}
             </Avatar>
           </Stack>
         </Stack>
