@@ -38,7 +38,7 @@ const AITab = ({ userName = 'Hero' }) => {
         sx={{
           p: 4,
           borderRadius: 4,
-          background: 'linear-gradient(135deg, #8A2D2E 0%, #4A1516 100%)',
+          background: 'linear-gradient(135deg, #9A2F2E 0%, #4A1516 100%)',
           color: 'white',
           mb: 4,
         }}
@@ -74,44 +74,44 @@ const AITab = ({ userName = 'Hero' }) => {
               gap: 1,
             }}
           >
-            <BrainCircuit size={20} color="#8A2D2E" /> RECOMMENDED FOR YOU
+            <BrainCircuit size={20} color="#9A2F2E" /> RECOMMENDED FOR YOU
           </Typography>
           <Stack spacing={2}>
             {recommendations.map((item) => (
-              <Card
+              <Paper
                 key={item.id}
                 sx={{
+                  p: 3,
                   borderRadius: 3,
-                  border: '1px solid rgba(138, 45, 46, 0.1)',
+                  border: '2px solid rgba(154, 47, 46, 0.1)',
+                  bgcolor: 'rgba(255, 255, 255, 0.6)',
                 }}
               >
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                    {item.title}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 2 }}
-                  >
-                    {item.reason}
-                  </Typography>
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Chip
-                      label={item.difficulty}
-                      size="small"
-                      variant="outlined"
-                    />
-                    <Button variant="text" sx={{ fontWeight: 800 }}>
-                      Explore Quest
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                  {item.title}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  {item.reason}
+                </Typography>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Chip
+                    label={item.difficulty}
+                    size="small"
+                    variant="outlined"
+                  />
+                  <Button variant="text" sx={{ fontWeight: 800 }}>
+                    Explore Quest
+                  </Button>
+                </Stack>
+              </Paper>
             ))}
           </Stack>
         </Grid>
@@ -122,8 +122,8 @@ const AITab = ({ userName = 'Hero' }) => {
             sx={{
               p: 3,
               borderRadius: 3,
-              bgcolor: 'rgba(138, 45, 46, 0.03)',
-              border: '2px dashed #8A2D2E',
+              bgcolor: 'rgba(255, 255, 255, 0.6)',
+              border: '2px solid rgba(138, 45, 46, 0.1)',
             }}
           >
             <Typography

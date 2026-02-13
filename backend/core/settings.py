@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'corsheaders',              # ضروري للسماح للفرونت إند بالاتصال
     'accounts',
     'skills',
+    'courses',
 ]
 
 MIDDLEWARE = [

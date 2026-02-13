@@ -1,19 +1,32 @@
 // App.js
-import React from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import theme from './theme';
+import axios from 'axios';
 
-// استيرادات المكونات
 import Header from './components/layout/Header';
 import LoginForm from './components/auth/LoginForm';
 import SignupForm from './components/auth/SignupForm';
-import MainDashboard from './components/layout/MainDashboard'; // هاد غالباً للـ Learner
+import MainDashboard from './components/layout/MainDashboard';
 import TutorDashboard from './components/tutor/TutorDashboard';
 
 export default function App() {
   const navigate = useNavigate();
-  const userXP = 1250;
+  const location = useLocation();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || location.pathname !== '/dashboard') return;
+    axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
+      headers: { Authorization: `Token ${token}` }
+    }).then(res => setProfile(res.data)).catch(() => {});
+  }, [location.pathname]);
+
+  const userXP = profile?.experience ?? 0;
+  const avatarUrl = profile?.avatar_url ?? null;
+  const isTrustedTutor = profile?.is_trusted_tutor ?? false;
 
   // دالة بسيطة لتقرير أي داشبورد نعرض بناءً على الدور المخزن
   // App.js
@@ -59,10 +72,10 @@ export default function App() {
                 minHeight: '100vh',
                 display: 'flex',
                 flexDirection: 'column',
-                bgcolor: localStorage.getItem('role') === 'tutor' ? '#F8F4DF' : undefined,
+                bgcolor: '#F8F4DF',
               }}
             >
-              <Header userXP={userXP} isTutor={localStorage.getItem('role') === 'tutor'} />
+              <Header userXP={userXP} avatarUrl={avatarUrl} isTutor={localStorage.getItem('role') === 'tutor'} isTrustedTutor={isTrustedTutor} />
               <Box sx={{ width: '100%', mt: 4, flexGrow: 1 }}>
                 {renderDashboard()}{' '}
                 {/* هنا السحر: استدعاء الدالة التي تقرر المحتوى */}

@@ -8,7 +8,15 @@ const AboutTab = () => {
 
   return (
     <Stack spacing={3}>
-      <Paper sx={{ p: 3, borderRadius: 3, bgcolor: '#8A2D2E', color: '#fff' }}>
+      <Paper 
+        sx={{ 
+          p: 3, 
+          borderRadius: 3, 
+          bgcolor: '#9A2F2E', 
+          color: '#fff',
+          border: '2px solid rgba(154, 47, 46, 0.1)',
+        }}
+      >
         <Typography variant="h6" sx={{ color: '#FACA07', mb: 1.5 }}>
           The Arena Ecosystem 🏆
         </Typography>

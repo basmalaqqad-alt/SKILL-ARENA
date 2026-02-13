@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Box,
   Typography,
@@ -9,11 +10,13 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { FileText, GraduationCap, User, BarChart2, MapPin } from 'lucide-react';
+import { FileText, GraduationCap, User, BarChart2, MapPin, Video, HelpCircle, ShieldCheck } from 'lucide-react';
 import SkillsManagement from './SkillsManagement';
 import MyStudents from './MyStudents';
 import TutorProfile from './TutorProfile';
 import AIInsights from './AIInsights';
+import VideoUpload from './VideoUpload';
+import Quizzes from './Quizzes';
 
 const TUTOR_COLORS = {
   cream: '#F8F4DF',
@@ -24,13 +27,24 @@ const TUTOR_COLORS = {
 const navItems = [
   { id: 0, label: 'SKILLS MANAGEMENT', shortLabel: 'SKILLS', icon: FileText, subtitle: 'Manage Your Skills & Students' },
   { id: 1, label: 'MY STUDENTS', shortLabel: 'STUDENTS', icon: GraduationCap, subtitle: "Track and manage your students' activity" },
-  { id: 2, label: 'PROFILE', shortLabel: 'PROFILE', icon: User, subtitle: 'Your public profile and XP overview' },
-  { id: 3, label: 'INSIGHTS', shortLabel: 'INSIGHTS', icon: BarChart2, subtitle: 'AI-driven analytics and recommendations' },
+  { id: 2, label: 'MY COURSES', shortLabel: 'COURSES', icon: Video, subtitle: 'Publish a course by uploading your video' },
+  { id: 3, label: 'QUIZZES', shortLabel: 'QUIZZES', icon: HelpCircle, subtitle: 'Create and publish quizzes for learners' },
+  { id: 4, label: 'PROFILE', shortLabel: 'PROFILE', icon: User, subtitle: 'Your public profile and XP overview' },
+  { id: 5, label: 'INSIGHTS', shortLabel: 'INSIGHTS', icon: BarChart2, subtitle: 'AI-driven analytics and recommendations' },
 ];
 
 const TutorDashboard = () => {
   const [tab, setTab] = useState(0);
+  const [isTrustedTutor, setIsTrustedTutor] = useState(false);
   const currentItem = navItems[tab];
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
+      headers: { Authorization: `Token ${token}` }
+    }).then(res => setIsTrustedTutor(res.data?.is_trusted_tutor === true)).catch(() => {});
+  }, []);
 
   return (
     <Box
@@ -63,17 +77,22 @@ const TutorDashboard = () => {
               filter: 'drop-shadow(1px 1px 0 #9A2F2E)',
             }}
           />
-          <Typography
-            variant="subtitle2"
-            sx={{
-              color: TUTOR_COLORS.maroon,
-              fontWeight: 800,
-              letterSpacing: 1,
-              fontSize: '0.75rem',
-            }}
-          >
-            TUTOR ARENA - MASTER
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: TUTOR_COLORS.maroon,
+                fontWeight: 800,
+                letterSpacing: 1,
+                fontSize: '0.75rem',
+              }}
+            >
+              TUTOR ARENA - MASTER
+            </Typography>
+            {isTrustedTutor && (
+              <ShieldCheck size={16} color={TUTOR_COLORS.maroon} titleAccess="Trusted Tutor – Verified certificate" />
+            )}
+          </Box>
         </Box>
 
         <List sx={{ px: 1 }}>
@@ -178,8 +197,10 @@ const TutorDashboard = () => {
         <Box sx={{ mt: 2 }}>
           {tab === 0 && <SkillsManagement />}
           {tab === 1 && <MyStudents />}
-          {tab === 2 && <TutorProfile />}
-          {tab === 3 && <AIInsights />}
+          {tab === 2 && <VideoUpload />}
+          {tab === 3 && <Quizzes />}
+          {tab === 4 && <TutorProfile />}
+          {tab === 5 && <AIInsights />}
         </Box>
       </Box>
     </Box>
