@@ -39,6 +39,9 @@ const LoginForm = ({ onLogin, onSwitch }) => {
         // تأكدي أن المفتاح هو 'role' وليس 'user_role' ليتوافق مع App.js
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('role', response.data.role);
+        if (response.data.username) {
+          localStorage.setItem('username', response.data.username);
+        }
 
         // إرسال البيانات للأب (App.js) لتغيير الصفحة
         onLogin(response.data);
