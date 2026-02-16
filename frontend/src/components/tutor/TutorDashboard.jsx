@@ -10,13 +10,14 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { FileText, GraduationCap, User, BarChart2, MapPin, Video, HelpCircle, ShieldCheck } from 'lucide-react';
+import { FileText, GraduationCap, User, BarChart2, MapPin, Video, HelpCircle, ShieldCheck, CreditCard } from 'lucide-react';
 import SkillsManagement from './SkillsManagement';
 import MyStudents from './MyStudents';
 import TutorProfile from './TutorProfile';
 import AIInsights from './AIInsights';
 import VideoUpload from './VideoUpload';
 import Quizzes from './Quizzes';
+import BankAccount from './BankAccount';
 
 const TUTOR_COLORS = {
   cream: '#F8F4DF',
@@ -31,6 +32,7 @@ const navItems = [
   { id: 3, label: 'QUIZZES', shortLabel: 'QUIZZES', icon: HelpCircle, subtitle: 'Create and publish quizzes for learners' },
   { id: 4, label: 'PROFILE', shortLabel: 'PROFILE', icon: User, subtitle: 'Your public profile and XP overview' },
   { id: 5, label: 'INSIGHTS', shortLabel: 'INSIGHTS', icon: BarChart2, subtitle: 'AI-driven analytics and recommendations' },
+  { id: 6, label: 'BANK ACCOUNT', shortLabel: 'BANK', icon: CreditCard, subtitle: 'Manage your bank account for receiving payments' },
 ];
 
 const TutorDashboard = () => {
@@ -201,6 +203,7 @@ const TutorDashboard = () => {
           {tab === 3 && <Quizzes />}
           {tab === 4 && <TutorProfile />}
           {tab === 5 && <AIInsights />}
+          {tab === 6 && <BankAccount />}
         </Box>
       </Box>
     </Box>
