@@ -34,6 +34,7 @@ const CoursesTab = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [courseDetail, setCourseDetail] = useState(null);
+  const currentUsername = localStorage.getItem('username');
   const [commentText, setCommentText] = useState('');
   const [ratingStars, setRatingStars] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -113,10 +114,16 @@ const CoursesTab = () => {
       const response = await axios.post(`http://127.0.0.1:8000/api/learner/courses/${courseDetail.id}/enroll/`, payload, {
         headers: { Authorization: `Token ${token}` }
       });
-      setCourseDetail(prev => prev ? { ...prev, enrolled: true } : null);
+      // mark enrolled and store payment info if available
+      const payment = response.data?.payment || null;
+      setCourseDetail(prev => prev ? { ...prev, enrolled: true, payment } : null);
       setShowPaymentStep(false);
       setPaymentMethod(null);
-      alert('Successfully enrolled! Check "My Courses" tab.');
+      if (payment) {
+        alert(`Successfully enrolled! Paid SAR ${Number(payment.amount)} (status: ${payment.status})`);
+      } else {
+        alert('Successfully enrolled! Check "My Courses" tab.');
+      }
       // تحديث قائمة الكورسات
       const coursesResponse = await axios.get('http://127.0.0.1:8000/api/learner/courses/', {
         headers: { 'Authorization': `Token ${token}` }
@@ -251,6 +258,11 @@ const CoursesTab = () => {
       {/* الكورسات = الفيديوهات المنشورة من التيوتورز */}
       {tabValue === 0 && (
         <Box>
+          {loading && (
+            <Paper sx={{ p: 2, mb: 2, textAlign: 'center' }}>
+              <Typography variant="body1">Loading...</Typography>
+            </Paper>
+          )}
           <TextField
             fullWidth
             placeholder="Search courses..."
@@ -265,9 +277,7 @@ const CoursesTab = () => {
               ),
             }}
           />
-          <Typography variant="h6" sx={{ fontWeight: 900, mb: 3 }}>
-            AVAILABLE COURSES ({filteredCourses.length})
-          </Typography>
+              {/* Price summary removed (was referencing `course` outside map) */}
           {filteredCourses.length === 0 ? (
             <Paper
               sx={{
@@ -309,7 +319,7 @@ const CoursesTab = () => {
                     <CardContent>
                       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
                         <Chip
-                          label={course.is_paid && course.price ? `$${Number(course.price)}` : 'Free'}
+                          label={course.display_price || (course.is_paid && course.price ? `SAR ${Number(course.price)}` : 'Free')}
                           size="small"
                           sx={{
                             bgcolor: course.is_paid ? 'warning.light' : 'success.light',
@@ -357,23 +367,6 @@ const CoursesTab = () => {
                           }}
                         >
                           Enroll
-                        </Button>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<Play size={16} />}
-                          href={course.video_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          sx={{
-                            flex: 1,
-                            minWidth: 100,
-                            fontWeight: 800,
-                            bgcolor: '#9A2F2E',
-                            '&:hover': { bgcolor: '#7a2627' },
-                          }}
-                        >
-                          Watch
                         </Button>
                       </Stack>
                     </CardContent>
@@ -472,7 +465,7 @@ const CoursesTab = () => {
             <DialogContent>
               <Typography variant="body2" sx={{ mb: 2 }}>{courseDetail.description || 'No description'}</Typography>
               <Typography variant="body2" sx={{ fontWeight: 700, mb: 2 }}>
-                Tutor: {courseDetail.tutor_username} · {courseDetail.is_paid && courseDetail.price ? `$${Number(courseDetail.price)}` : 'Free'}
+                Tutor: {courseDetail.tutor_username} · {courseDetail.display_price || (courseDetail.is_paid && courseDetail.price ? `SAR ${Number(courseDetail.price)}` : 'Free')}
               </Typography>
               {courseDetail.average_rating != null && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -514,7 +507,7 @@ const CoursesTab = () => {
               {showPaymentStep && isPaidCourse && (
                 <Paper variant="outlined" sx={{ mt: 3, p: 2.5, borderRadius: 2, borderColor: '#9A2F2E', bgcolor: 'rgba(154, 47, 46, 0.04)' }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, color: '#9A2F2E' }}>
-                    Choose Payment Method — ${Number(courseDetail.price)}
+                    Choose Payment Method — {courseDetail.display_price || (courseDetail.is_paid && courseDetail.price ? `SAR ${Number(courseDetail.price)}` : 'Free')}
                   </Typography>
                   
                   {/* معلومات البنك للإنستركتور */}
@@ -652,13 +645,26 @@ const CoursesTab = () => {
             <DialogActions>
               <Button onClick={() => { setCourseDetail(null); setShowPaymentStep(false); }}>Close</Button>
               {!showPaymentStep && (
-                <Button variant="contained" onClick={handleEnrollClick} disabled={submitting || courseDetail?.enrolled} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
+                <Button
+                  variant="contained"
+                  onClick={handleEnrollClick}
+                  disabled={submitting || courseDetail?.enrolled || courseDetail?.tutor_username === currentUsername}
+                  sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}
+                >
                   {isPaidCourse ? 'Pay & Enroll' : 'Enroll in course'}
                 </Button>
               )}
-              <Button variant="contained" href={courseDetail.video_url} target="_blank" rel="noopener noreferrer" startIcon={<Play size={18} />} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
-                Watch
-              </Button>
+
+              {/* Show Watch only if enrolled or if the course is free. Owners no longer get free view by username. */}
+              {(courseDetail.enrolled || !courseDetail.is_paid) ? (
+                <Button variant="contained" href={courseDetail.video_url} target="_blank" rel="noopener noreferrer" startIcon={<Play size={18} />} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
+                  Watch
+                </Button>
+              ) : (
+                <Button variant="outlined" onClick={() => { setShowPaymentStep(true); }} startIcon={<Play size={18} />} sx={{ bgcolor: '#fff', borderColor: '#9A2F2E', color: '#9A2F2E' }}>
+                  Pay & Enroll
+                </Button>
+              )}
             </DialogActions>
           </>
         )}

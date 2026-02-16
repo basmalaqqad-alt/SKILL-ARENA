@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 
 class ProfileSerializer(serializers.Serializer):
+    role = serializers.CharField()
     username = serializers.CharField()
     avatar_url = serializers.CharField(allow_null=True)
     experience = serializers.IntegerField()

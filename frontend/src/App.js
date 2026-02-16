@@ -21,7 +21,13 @@ export default function App() {
     if (!token || location.pathname !== '/dashboard') return;
     axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
       headers: { Authorization: `Token ${token}` }
-    }).then(res => setProfile(res.data)).catch(() => {});
+    }).then(res => {
+      setProfile(res.data);
+      try {
+        if (res.data.username) localStorage.setItem('username', res.data.username);
+        if (res.data.role) localStorage.setItem('role', res.data.role);
+      } catch (e) {}
+    }).catch(() => {});
   }, [location.pathname]);
 
   const userXP = profile?.experience ?? 0;
