@@ -89,6 +89,7 @@ def user_profile(request):
     arena_coins = xp // 1000  # 1,000 XP = 1 Arena Coin (بسيطة حالياً بدون خصم عند الصرف)
 
     hero_data = {
+        'role': user.role,
         'username': user.username,
         'avatar_url': request.build_absolute_uri(user.avatar.url) if user.avatar else None,
         'experience': xp,

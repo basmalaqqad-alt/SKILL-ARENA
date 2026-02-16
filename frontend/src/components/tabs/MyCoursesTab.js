@@ -25,7 +25,6 @@ import {
   HelpCircle,
   ShieldCheck,
   Star,
-  MessageCircle,
 } from 'lucide-react';
 
 const LEARNER_COLORS = {
@@ -176,7 +175,7 @@ const MyCoursesTab = () => {
                       <CardContent>
                         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
                           <Chip
-                            label={course.is_paid && course.price ? `$${Number(course.price)}` : 'Free'}
+                            label={course.display_price || (course.is_paid && course.price ? `SAR ${Number(course.price)}` : 'Free')}
                             size="small"
                             sx={{
                               bgcolor: course.is_paid ? 'warning.light' : 'success.light',
@@ -272,7 +271,7 @@ const MyCoursesTab = () => {
                       <CardContent>
                         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
                           <Chip
-                            label={course.is_paid && course.price ? `$${Number(course.price)}` : 'Free'}
+                            label={course.display_price || (course.is_paid && course.price ? `SAR ${Number(course.price)}` : 'Free')}
                             size="small"
                             sx={{
                               bgcolor: course.is_paid ? 'warning.light' : 'success.light',
@@ -340,8 +339,8 @@ const MyCoursesTab = () => {
             </DialogTitle>
             <DialogContent>
               <Typography variant="body2" sx={{ mb: 2 }}>{selectedCourse.description || 'No description'}</Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, mb: 2 }}>
-                Tutor: {selectedCourse.tutor_username} · {selectedCourse.is_paid && selectedCourse.price ? `$${Number(selectedCourse.price)}` : 'Free'}
+                <Typography variant="body2" sx={{ fontWeight: 700, mb: 2 }}>
+                Tutor: {selectedCourse.tutor_username} · {selectedCourse.is_paid && selectedCourse.price ? `SAR ${Number(selectedCourse.price)}` : 'Free'}
               </Typography>
               {selectedCourse.enrollment && (
                 <Box sx={{ mb: 2 }}>

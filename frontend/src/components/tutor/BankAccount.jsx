@@ -10,7 +10,7 @@ import {
   Alert,
   Grid,
 } from '@mui/material';
-import { CreditCard, Save, Building2 } from 'lucide-react';
+import { Save, Building2 } from 'lucide-react';
 
 const TUTOR_COLORS = {
   cream: '#F8F4DF',

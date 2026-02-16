@@ -59,6 +59,7 @@ class CourseSerializer(serializers.ModelSerializer):
     tutor_username = serializers.CharField(source='tutor.username', read_only=True)
     video_url = serializers.SerializerMethodField()
     tutor_verified = serializers.SerializerMethodField()
+    display_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -78,6 +79,11 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_tutor_verified(self, obj):
         return getattr(obj.tutor, 'is_trusted_tutor', bool(obj.tutor.certificate))
+
+    def get_display_price(self, obj):
+        if obj.is_paid and obj.price:
+            return f"SAR {obj.price}"
+        return 'Free'
 
 
 class CourseCreateSerializer(serializers.ModelSerializer):
@@ -109,6 +115,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     tutor_username = serializers.CharField(source='tutor.username', read_only=True)
     tutor_verified = serializers.SerializerMethodField()
     video_url = serializers.SerializerMethodField()
+    display_price = serializers.SerializerMethodField()
     comments = CourseCommentSerializer(many=True, read_only=True)
     quizzes = QuizSerializer(many=True, read_only=True)
     average_rating = serializers.SerializerMethodField()
@@ -118,7 +125,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             'id', 'title', 'description', 'tutor_username', 'tutor_verified',
-            'video_url', 'is_paid', 'price', 'comments', 'quizzes', 'average_rating', 'rating_count',
+            'video_url', 'is_paid', 'price', 'display_price', 'comments', 'quizzes', 'average_rating', 'rating_count',
             'created_at', 'updated_at'
         ]
 
@@ -140,3 +147,8 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
     def get_rating_count(self, obj):
         return obj.ratings.count()
+
+    def get_display_price(self, obj):
+        if obj.is_paid and obj.price:
+            return f"SAR {obj.price}"
+        return 'Free'
