@@ -72,12 +72,20 @@ class CourseRating(models.Model):
 
 
 class Quiz(models.Model):
-    """Model for tutor-created quizzes"""
+    """Model for tutor-created quizzes - مرتبط بكورس معين"""
     tutor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='quizzes',
         limit_choices_to={'role': 'tutor'}
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='quizzes',
+        null=True,
+        blank=True,
+        help_text='الكورس المرتبط بهذا الكويز (اختياري)'
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -88,7 +96,8 @@ class Quiz(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.title} - {self.tutor.username}"
+        course_info = f" ({self.course.title})" if self.course else ""
+        return f"{self.title} - {self.tutor.username}{course_info}"
 
 
 class Question(models.Model):
@@ -112,3 +121,39 @@ class Question(models.Model):
 
     def __str__(self):
         return f"Q: {self.question_text[:50]}... (Quiz: {self.quiz.title})"
+
+
+class CoursePayment(models.Model):
+    """سجل دفع كورس مدفوع - الفلوس تصل للإنستركتور"""
+    PAYMENT_METHOD_CHOICES = [
+        ('apple_pay', 'Apple Pay'),
+        ('card', 'بطاقة بنكية'),
+        ('bank_transfer', 'تحويل بنكي'),
+    ]
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'قيد الانتظار'),
+        ('completed', 'مكتمل'),
+        ('failed', 'فشل'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='course_payments')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='payments')
+    tutor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='received_payments',
+        limit_choices_to={'role': 'tutor'}
+    )
+    method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    card_last4 = models.CharField(max_length=4, blank=True)  # آخر 4 أرقام فقط للعرض
+    transaction_reference = models.CharField(max_length=100, blank=True, null=True, help_text='رقم المرجع للتحويل')
+    paid_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-paid_at']
+        unique_together = ['user', 'course']
+
+    def __str__(self):
+        return f"{self.user.username} paid {self.amount} to {self.tutor.username} for {self.course.title} ({self.method})"

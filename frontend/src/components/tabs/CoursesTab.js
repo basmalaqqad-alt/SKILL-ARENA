@@ -21,7 +21,7 @@ import {
   Stack,
   IconButton,
 } from '@mui/material';
-import { Search, Video, HelpCircle, Play, ShieldCheck, Star, MessageCircle } from 'lucide-react';
+import { Search, Video, HelpCircle, Play, ShieldCheck, Star, MessageCircle, UserPlus, Building2, Smartphone, CreditCard } from 'lucide-react';
 
 /**
  * CoursesTab: صفحة الكورسات مع البحث والفلترة.
@@ -37,6 +37,14 @@ const CoursesTab = () => {
   const [commentText, setCommentText] = useState('');
   const [ratingStars, setRatingStars] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [showPaymentStep, setShowPaymentStep] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [cardHolderName, setCardHolderName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryMonth, setExpiryMonth] = useState('');
+  const [expiryYear, setExpiryYear] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [transactionReference, setTransactionReference] = useState('');
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -71,6 +79,14 @@ const CoursesTab = () => {
     setCourseDetail(course);
     setCommentText('');
     setRatingStars(0);
+    setShowPaymentStep(false);
+    setPaymentMethod(null);
+    setCardHolderName('');
+    setCardNumber('');
+    setExpiryMonth('');
+    setExpiryYear('');
+    setCvv('');
+    setTransactionReference('');
     const token = localStorage.getItem('token');
     if (!token) return;
     axios.get(`http://127.0.0.1:8000/api/learner/courses/${course.id}/`, {
@@ -78,19 +94,98 @@ const CoursesTab = () => {
     }).then(res => setCourseDetail(res.data)).catch(() => {});
   };
 
-  const handleEnroll = async () => {
+  const isPaidCourse = courseDetail?.is_paid && Number(courseDetail?.price) > 0;
+
+  const handleEnrollClick = () => {
+    if (!courseDetail?.id) return;
+    if (isPaidCourse) {
+      setShowPaymentStep(true);
+      return;
+    }
+    handleEnrollSubmit({});
+  };
+
+  const handleEnrollSubmit = async (payload = {}) => {
     if (!courseDetail?.id) return;
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://127.0.0.1:8000/api/learner/courses/${courseDetail.id}/enroll/`, {}, {
+      const response = await axios.post(`http://127.0.0.1:8000/api/learner/courses/${courseDetail.id}/enroll/`, payload, {
         headers: { Authorization: `Token ${token}` }
       });
       setCourseDetail(prev => prev ? { ...prev, enrolled: true } : null);
+      setShowPaymentStep(false);
+      setPaymentMethod(null);
+      alert('Successfully enrolled! Check "My Courses" tab.');
+      // تحديث قائمة الكورسات
+      const coursesResponse = await axios.get('http://127.0.0.1:8000/api/learner/courses/', {
+        headers: { 'Authorization': `Token ${token}` }
+      });
+      setCourses(coursesResponse.data || []);
     } catch (e) {
-      console.error(e);
+      console.error(e?.response?.data || e);
+      alert(e.response?.data?.error || 'Error enrolling in course');
     }
     setSubmitting(false);
+  };
+
+  const handlePayWithApplePay = () => {
+    setPaymentMethod('apple_pay');
+    handleEnrollSubmit({ payment_method: 'apple_pay' });
+  };
+
+  const handlePayWithCard = () => {
+    if (!cardHolderName.trim() || !cardNumber.trim() || !expiryMonth.trim() || !expiryYear.trim() || !cvv.trim()) return;
+    handleEnrollSubmit({
+      payment_method: 'card',
+      card_holder_name: cardHolderName.trim(),
+      card_number: cardNumber.replace(/\s/g, ''),
+      expiry_month: expiryMonth.trim(),
+      expiry_year: expiryYear.trim(),
+      cvv: cvv.trim(),
+    });
+  };
+
+  const handlePayWithBankTransfer = () => {
+    if (!transactionReference.trim()) {
+      alert('Please enter transaction reference number');
+      return;
+    }
+    handleEnrollSubmit({
+      payment_method: 'bank_transfer',
+      transaction_reference: transactionReference.trim(),
+    });
+  };
+
+  const handleQuickEnroll = async (course) => {
+    if (!course?.id) return;
+    const isPaid = course.is_paid && Number(course.price) > 0;
+    
+    if (isPaid) {
+      // إذا كان مدفوع، نفتح الـ dialog للدفع
+      openCourseDetail(course);
+      setShowPaymentStep(true);
+    } else {
+      // إذا كان مجاني، نسجّل مباشرة
+      setSubmitting(true);
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(`http://127.0.0.1:8000/api/learner/courses/${course.id}/enroll/`, {}, {
+          headers: { Authorization: `Token ${token}` }
+        });
+        alert('Successfully enrolled! Check "My Courses" tab.');
+        // تحديث قائمة الكورسات
+        const coursesResponse = await axios.get('http://127.0.0.1:8000/api/learner/courses/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        setCourses(coursesResponse.data || []);
+      } catch (err) {
+        console.error('Error enrolling:', err);
+        alert(err.response?.data?.error || 'Error enrolling in course');
+      } finally {
+        setSubmitting(false);
+      }
+    }
   };
 
   const handleAddComment = async () => {
@@ -237,15 +332,31 @@ const CoursesTab = () => {
                       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }} noWrap>
                         {course.description || 'No description'}
                       </Typography>
-                      <Stack direction="row" spacing={1}>
+                      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
                         <Button
                           variant="outlined"
                           size="small"
                           onClick={() => openCourseDetail(course)}
                           startIcon={<MessageCircle size={16} />}
-                          sx={{ flex: 1, fontWeight: 700 }}
+                          sx={{ flex: 1, minWidth: 100, fontWeight: 700 }}
                         >
                           Details
+                        </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleQuickEnroll(course)}
+                          startIcon={<UserPlus size={16} />}
+                          disabled={submitting}
+                          sx={{
+                            flex: 1,
+                            minWidth: 100,
+                            fontWeight: 800,
+                            bgcolor: '#2e7d32',
+                            '&:hover': { bgcolor: '#1b5e20' },
+                          }}
+                        >
+                          Enroll
                         </Button>
                         <Button
                           variant="contained"
@@ -256,6 +367,7 @@ const CoursesTab = () => {
                           rel="noopener noreferrer"
                           sx={{
                             flex: 1,
+                            minWidth: 100,
                             fontWeight: 800,
                             bgcolor: '#9A2F2E',
                             '&:hover': { bgcolor: '#7a2627' },
@@ -397,12 +509,153 @@ const CoursesTab = () => {
                 sx={{ mb: 1 }}
               />
               <Button size="small" onClick={handleAddComment} disabled={submitting || !commentText.trim()}>Post comment</Button>
+
+              {/* خطوة الدفع للكورس المدفوع */}
+              {showPaymentStep && isPaidCourse && (
+                <Paper variant="outlined" sx={{ mt: 3, p: 2.5, borderRadius: 2, borderColor: '#9A2F2E', bgcolor: 'rgba(154, 47, 46, 0.04)' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, color: '#9A2F2E' }}>
+                    Choose Payment Method — ${Number(courseDetail.price)}
+                  </Typography>
+                  
+                  {/* معلومات البنك للإنستركتور */}
+                  {courseDetail.tutor_bank_account && (
+                    <Paper sx={{ p: 2, mb: 2, bgcolor: 'rgba(46, 125, 50, 0.1)', borderRadius: 2, border: '1px solid #2e7d32' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, color: '#2e7d32', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Building2 size={18} /> Bank Transfer Information
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2"><strong>Bank:</strong> {courseDetail.tutor_bank_account.bank_name}</Typography>
+                        <Typography variant="body2"><strong>Account Holder:</strong> {courseDetail.tutor_bank_account.account_holder_name}</Typography>
+                        <Typography variant="body2"><strong>Account Number:</strong> {courseDetail.tutor_bank_account.account_number}</Typography>
+                        {courseDetail.tutor_bank_account.iban && (
+                          <Typography variant="body2"><strong>IBAN:</strong> {courseDetail.tutor_bank_account.iban}</Typography>
+                        )}
+                        {courseDetail.tutor_bank_account.swift_code && (
+                          <Typography variant="body2"><strong>SWIFT:</strong> {courseDetail.tutor_bank_account.swift_code}</Typography>
+                        )}
+                        {courseDetail.tutor_bank_account.branch_name && (
+                          <Typography variant="body2"><strong>Branch:</strong> {courseDetail.tutor_bank_account.branch_name}</Typography>
+                        )}
+                      </Stack>
+                    </Paper>
+                  )}
+
+                  <Stack direction="row" spacing={2} sx={{ mb: 2, flexWrap: 'wrap' }}>
+                    <Button
+                      variant={paymentMethod === 'apple_pay' ? 'contained' : 'outlined'}
+                      startIcon={<Smartphone size={20} />}
+                      onClick={() => setPaymentMethod('apple_pay')}
+                      sx={{ flex: 1, minWidth: 120, fontWeight: 700, borderColor: '#9A2F2E', color: '#9A2F2E', '&.MuiButton-contained': { bgcolor: '#9A2F2E' } }}
+                    >
+                      Apple Pay
+                    </Button>
+                    <Button
+                      variant={paymentMethod === 'card' ? 'contained' : 'outlined'}
+                      startIcon={<CreditCard size={20} />}
+                      onClick={() => setPaymentMethod('card')}
+                      sx={{ flex: 1, minWidth: 120, fontWeight: 700, borderColor: '#9A2F2E', color: '#9A2F2E', '&.MuiButton-contained': { bgcolor: '#9A2F2E' } }}
+                    >
+                      Card
+                    </Button>
+                    <Button
+                      variant={paymentMethod === 'bank_transfer' ? 'contained' : 'outlined'}
+                      startIcon={<Building2 size={20} />}
+                      onClick={() => setPaymentMethod('bank_transfer')}
+                      sx={{ flex: 1, minWidth: 120, fontWeight: 700, borderColor: '#9A2F2E', color: '#9A2F2E', '&.MuiButton-contained': { bgcolor: '#9A2F2E' } }}
+                    >
+                      Bank Transfer
+                    </Button>
+                  </Stack>
+
+                  {paymentMethod === 'card' && (
+                    <Stack spacing={1.5}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Cardholder Name"
+                        value={cardHolderName}
+                        onChange={(e) => setCardHolderName(e.target.value)}
+                        placeholder="Cardholder Name"
+                      />
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Card Number"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').slice(0, 19))}
+                        placeholder="1234 5678 9012 3456"
+                        inputProps={{ maxLength: 19 }}
+                      />
+                      <Stack direction="row" spacing={1}>
+                        <TextField
+                          size="small"
+                          label="Month"
+                          value={expiryMonth}
+                          onChange={(e) => setExpiryMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                          placeholder="MM"
+                          sx={{ width: 80 }}
+                          inputProps={{ maxLength: 2 }}
+                        />
+                        <TextField
+                          size="small"
+                          label="Year"
+                          value={expiryYear}
+                          onChange={(e) => setExpiryYear(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          placeholder="YYYY"
+                          sx={{ width: 100 }}
+                          inputProps={{ maxLength: 4 }}
+                        />
+                        <TextField
+                          size="small"
+                          label="CVV"
+                          value={cvv}
+                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          placeholder="123"
+                          type="password"
+                          sx={{ width: 80 }}
+                          inputProps={{ maxLength: 4 }}
+                        />
+                      </Stack>
+                      <Button variant="contained" onClick={handlePayWithCard} disabled={submitting || !cardHolderName.trim() || cardNumber.replace(/\s/g, '').length < 13 || !expiryMonth || !expiryYear || cvv.length < 3} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' }, fontWeight: 800 }}>
+                        Complete Payment & Enroll
+                      </Button>
+                    </Stack>
+                  )}
+
+                  {paymentMethod === 'bank_transfer' && (
+                    <Stack spacing={1.5}>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                        After transferring the amount to the bank account above, enter the transaction reference number:
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Transaction Reference Number"
+                        value={transactionReference}
+                        onChange={(e) => setTransactionReference(e.target.value)}
+                        placeholder="Enter transaction reference"
+                      />
+                      <Button variant="contained" onClick={handlePayWithBankTransfer} disabled={submitting || !transactionReference.trim()} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' }, fontWeight: 800 }}>
+                        Confirm Transfer & Enroll
+                      </Button>
+                    </Stack>
+                  )}
+
+                  {paymentMethod === 'apple_pay' && (
+                    <Button variant="contained" fullWidth onClick={handlePayWithApplePay} disabled={submitting} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' }, fontWeight: 800 }}>
+                      Pay with Apple Pay & Enroll
+                    </Button>
+                  )}
+                </Paper>
+              )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setCourseDetail(null)}>Close</Button>
-              <Button variant="contained" onClick={handleEnroll} disabled={submitting} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
-                Enroll in course
-              </Button>
+              <Button onClick={() => { setCourseDetail(null); setShowPaymentStep(false); }}>Close</Button>
+              {!showPaymentStep && (
+                <Button variant="contained" onClick={handleEnrollClick} disabled={submitting || courseDetail?.enrolled} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
+                  {isPaidCourse ? 'Pay & Enroll' : 'Enroll in course'}
+                </Button>
+              )}
               <Button variant="contained" href={courseDetail.video_url} target="_blank" rel="noopener noreferrer" startIcon={<Play size={18} />} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
                 Watch
               </Button>

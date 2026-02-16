@@ -10,10 +10,11 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { BookOpen, Trophy, User, Sparkles, BrainCircuit, MapPin } from 'lucide-react';
+import { BookOpen, Trophy, User, Sparkles, BrainCircuit, MapPin, GraduationCap } from 'lucide-react';
 
 import AboutTab from '../tabs/AboutTab';
 import CoursesTab from '../tabs/CoursesTab';
+import MyCoursesTab from '../tabs/MyCoursesTab';
 import LeaderboardTab from '../tabs/LeaderboardTab';
 import ProfileTab from '../tabs/ProfileTab';
 import AITab from '../tabs/AITab';
@@ -71,6 +72,14 @@ const MainDashboard = () => {
       component: <CoursesTab />,
     },
     { 
+      id: 5, 
+      label: 'MY COURSES', 
+      shortLabel: 'MY COURSES',
+      icon: GraduationCap, 
+      subtitle: 'Your enrolled courses and progress',
+      component: <MyCoursesTab />,
+    },
+    { 
       id: 3, 
       label: 'LEADERBOARDS', 
       shortLabel: 'RANK',
@@ -96,7 +105,7 @@ const MainDashboard = () => {
     },
   ];
 
-  const currentItem = menuItems[activeTab];
+  const currentItem = menuItems.find(item => item.id === activeTab) || menuItems[0];
 
   return (
     <Box
@@ -242,7 +251,7 @@ const MainDashboard = () => {
         </Box>
 
         <Box sx={{ mt: 2 }}>
-          {menuItems[activeTab].component}
+          {currentItem.component}
         </Box>
       </Box>
     </Box>
