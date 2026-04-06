@@ -8,11 +8,14 @@ import { BarChart2, TrendingUp, Users, AlertCircle, Star, BookOpen, DollarSign, 
 
 const MAROON = '#9A2F2E';
 const MAROON_LIGHT = 'rgba(154, 47, 46, 0.08)';
-const GEMINI_API_KEY = 'AIzaSyBAQSNq3sPLovXUCD7syV98_A64Wl7Waq0';
+const GEMINI_API_KEY = 'AIzaSyBb4-7E61AZ2HhwfW41FY-2lNucffKl3Xc';
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const askGemini = async (prompt) => {
+  await sleep(2000);
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -23,7 +26,15 @@ const askGemini = async (prompt) => {
     }
   );
   const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from AI.';
+  if (data.error) {
+    console.error('Gemini API Error:', data.error);
+    return `API Error: ${data.error.message}`;
+  }
+  if (!data.candidates || data.candidates.length === 0) {
+    console.error('Gemini empty response:', data);
+    return 'No candidates returned. Check API key or quota.';
+  }
+  return data.candidates[0].content.parts[0].text;
 };
 
 const StatCard = ({ icon: Icon, title, value, subtitle, color = MAROON }) => (
