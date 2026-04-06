@@ -8,7 +8,7 @@ import { BarChart2, TrendingUp, Users, AlertCircle, Star, BookOpen, DollarSign, 
 
 const MAROON = '#9A2F2E';
 const MAROON_LIGHT = 'rgba(154, 47, 46, 0.08)';
-const GEMINI_API_KEY = 'AIzaSyBb4-7E61AZ2HhwfW41FY-2lNucffKl3Xc';
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY;
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
