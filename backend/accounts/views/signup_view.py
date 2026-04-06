@@ -24,19 +24,24 @@ def signup_hero(request):
         return Response({'error': 'This hero name is already taken!'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # 2. إنشاء المستخدم وتشفير الباسورد (بدون حفظ نهائي للآن)
+        # 2. إنشاء المستخدم وتشفير الباسورد
         user = User.objects.create_user(
             username=username, 
             email=email, 
-            password=password
+            password=password  # create_user يقوم بتشفير الباسورد تلقائياً
         )
         
-        # 3. حفظ البيانات الإضافية التي أضفناها في الـ Models
+        # 3. تحديث البيانات الإضافية (role, certificate, XP)
         user.role = role
         if certificate:
-            user.certificate = certificate # هنا يتم وضع الملف تلقائياً في مجلد media/certificates
+            user.certificate = certificate
+        user.experience = 100  # Welcome Bonus
         
-        user.save() # حفظ نهائي لكل البيانات
+        # حفظ الحقول المحددة فقط (لضمان عدم إعادة حفظ password hash)
+        update_fields = ['role', 'experience']
+        if certificate:
+            update_fields.append('certificate')
+        user.save(update_fields=update_fields)
 
         # 4. إنشاء توكن فوراً لضمان الدخول التلقائي
         token, _ = Token.objects.get_or_create(user=user)

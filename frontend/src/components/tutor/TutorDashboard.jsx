@@ -10,13 +10,13 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { FileText, GraduationCap, User, BarChart2, MapPin, Video, HelpCircle, ShieldCheck } from 'lucide-react';
-import SkillsManagement from './SkillsManagement';
+import { GraduationCap, User, BarChart2, MapPin, Video, HelpCircle, ShieldCheck, CreditCard } from 'lucide-react';
 import MyStudents from './MyStudents';
 import TutorProfile from './TutorProfile';
 import AIInsights from './AIInsights';
 import VideoUpload from './VideoUpload';
 import Quizzes from './Quizzes';
+import BankAccount from './BankAccount';
 
 const TUTOR_COLORS = {
   cream: '#F8F4DF',
@@ -25,12 +25,12 @@ const TUTOR_COLORS = {
 };
 
 const navItems = [
-  { id: 0, label: 'SKILLS MANAGEMENT', shortLabel: 'SKILLS', icon: FileText, subtitle: 'Manage Your Skills & Students' },
-  { id: 1, label: 'MY STUDENTS', shortLabel: 'STUDENTS', icon: GraduationCap, subtitle: "Track and manage your students' activity" },
-  { id: 2, label: 'MY COURSES', shortLabel: 'COURSES', icon: Video, subtitle: 'Publish a course by uploading your video' },
-  { id: 3, label: 'QUIZZES', shortLabel: 'QUIZZES', icon: HelpCircle, subtitle: 'Create and publish quizzes for learners' },
-  { id: 4, label: 'PROFILE', shortLabel: 'PROFILE', icon: User, subtitle: 'Your public profile and XP overview' },
-  { id: 5, label: 'INSIGHTS', shortLabel: 'INSIGHTS', icon: BarChart2, subtitle: 'AI-driven analytics and recommendations' },
+  { id: 0, label: 'MY STUDENTS', shortLabel: 'STUDENTS', icon: GraduationCap, subtitle: "Track and manage your students' activity" },
+  { id: 1, label: 'MY COURSES', shortLabel: 'COURSES', icon: Video, subtitle: 'Publish a course by uploading your video' },
+  { id: 2, label: 'QUIZZES', shortLabel: 'QUIZZES', icon: HelpCircle, subtitle: 'Create and publish quizzes for learners' },
+  { id: 3, label: 'PROFILE', shortLabel: 'PROFILE', icon: User, subtitle: 'Your public profile and XP overview' },
+  { id: 4, label: 'INSIGHTS', shortLabel: 'INSIGHTS', icon: BarChart2, subtitle: 'AI-driven analytics and recommendations' },
+  { id: 5, label: 'BANK ACCOUNT', shortLabel: 'BANK', icon: CreditCard, subtitle: 'Manage your bank account for receiving payments' },
 ];
 
 const TutorDashboard = () => {
@@ -195,12 +195,12 @@ const TutorDashboard = () => {
         </Box>
 
         <Box sx={{ mt: 2 }}>
-          {tab === 0 && <SkillsManagement />}
-          {tab === 1 && <MyStudents />}
-          {tab === 2 && <VideoUpload />}
-          {tab === 3 && <Quizzes />}
-          {tab === 4 && <TutorProfile />}
-          {tab === 5 && <AIInsights />}
+          {tab === 0 && <MyStudents />}
+          {tab === 1 && <VideoUpload />}
+          {tab === 2 && <Quizzes />}
+          {tab === 3 && <TutorProfile />}
+          {tab === 4 && <AIInsights />}
+          {tab === 5 && <BankAccount />}
         </Box>
       </Box>
     </Box>

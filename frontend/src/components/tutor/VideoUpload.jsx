@@ -90,7 +90,8 @@ const VideoUpload = () => {
         setFileName('');
         setIsPaid(false);
         setPrice('');
-        fetchCourses();
+        // تحديث القائمة بعد الرفع مباشرة
+        await fetchCourses();
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to publish course. Please try again.');
@@ -106,7 +107,7 @@ const VideoUpload = () => {
         headers: { 'Authorization': `Token ${token}` }
       });
       setCourses(response.data || []);
-      setSuccess('');
+      // تم حذف setSuccess('') من هنا — كانت المشكلة الأساسية
     } catch (err) {
       console.error('Failed to fetch courses:', err);
     }
@@ -124,7 +125,8 @@ const VideoUpload = () => {
       await axios.delete(`http://127.0.0.1:8000/api/tutor/courses/${courseId}/`, {
         headers: { 'Authorization': `Token ${token}` }
       });
-      fetchCourses();
+      // تحديث القائمة مباشرة بدون setSuccess أولاً
+      await fetchCourses();
       setSuccess('Course deleted successfully!');
     } catch (err) {
       setError('Failed to delete course');
