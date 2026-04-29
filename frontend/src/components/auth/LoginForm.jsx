@@ -1,164 +1,138 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import {
-  Paper,
-  Stack,
-  Typography,
-  TextField,
-  Button,
-  InputAdornment,
-  Box,
-  Alert,
-} from '@mui/material';
-import { User, Lock } from 'lucide-react';
+import { Box, Stack, Typography, TextField, Button, Alert, CircularProgress, InputAdornment } from '@mui/material';
+import { User, Lock, ArrowRight } from 'lucide-react';
 
-/**
- * LoginForm: نسخة مطورة لتدعم تحويل المستخدم بناءً على الـ Role
- */
+
+const SkillArenaLogo = ({ height = 40 }) => (
+  <svg height={height} viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block' }}>
+    <text
+      x="260" y="54"
+      textAnchor="middle"
+      style={{
+        fontFamily: "'Arial Black', 'Arial Bold', sans-serif",
+        fontSize: '52px',
+        fontWeight: 900,
+        fill: '#FACA07',
+        stroke: '#7A1E1E',
+        strokeWidth: '6px',
+        paintOrder: 'stroke fill',
+        letterSpacing: '2px',
+      }}
+    >SKILLARENA</text>
+  </svg>
+);
+
 const LoginForm = ({ onLogin, onSwitch }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
 
-  const handleLoginClick = async () => {
-    setLoading(true);
-    setError('');
-
+  const handleLogin = async () => {
+    if (!username.trim() || !password.trim()) return;
+    setLoading(true); setError('');
     try {
-      // الاتصال بالباك إند المحلي
-      const response = await axios.post(
-        'http://127.0.0.1:8000/api/accounts/auth/login/',
-        {
-          username: username,
-          password: password,
-        }
-      );
-
-      if (response.status === 200) {
-        // تأكدي أن المفتاح هو 'role' وليس 'user_role' ليتوافق مع App.js
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('role', response.data.role);
-        if (response.data.username) {
-          localStorage.setItem('username', response.data.username);
-        }
-
-        // إرسال البيانات للأب (App.js) لتغيير الصفحة
-        onLogin(response.data);
+      const res = await axios.post('http://127.0.0.1:8000/api/accounts/auth/login/', { username, password });
+      if (res.status === 200) {
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('role', res.data.role);
+        if (res.data.username) localStorage.setItem('username', res.data.username);
+        onLogin(res.data);
       }
     } catch (err) {
-      if (!err.response) {
-        setError('Server is offline. Check your Django terminal!');
-      } else {
-        setError(
-          err.response?.data?.error ||
-            err.response?.data?.message ||
-            err.response?.data?.non_field_errors?.[0] ||
-            'Hero not found or wrong password!'
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
+      setError(!err.response
+        ? 'Server offline — check Django terminal.'
+        : err.response?.data?.error || err.response?.data?.non_field_errors?.[0] || 'Incorrect username or password.');
+    } finally { setLoading(false); }
   };
 
   return (
     <Box
       sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
+        minHeight: '100vh',
+        bgcolor: '#F4F2EF',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        p: 2,
+        // subtle geometric background
+        backgroundImage: [
+          'radial-gradient(circle at 15% 20%, rgba(250,202,7,0.07) 0%, transparent 50%)',
+          'radial-gradient(circle at 85% 80%, rgba(138,45,46,0.06) 0%, transparent 50%)',
+        ].join(','),
       }}
     >
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          borderRadius: 3,
-          width: '100%',
-          maxWidth: 400,
-          bgcolor: 'rgba(255, 255, 255, 0.9)',
-        }}
-      >
-        <Stack spacing={3}>
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 900, color: 'primary.main' }}
-            >
-              SKILLARENA
-            </Typography>
-            <Typography
-              variant="subtitle2"
-              sx={{ color: 'text.secondary', letterSpacing: 1 }}
-            >
-              PLAY • LEARN • EARN
-            </Typography>
-          </Box>
+      <Box sx={{ width: '100%', maxWidth: 400 }}>
 
-          <Typography variant="h5" textAlign="center" sx={{ fontWeight: 800 }}>
-            Hero Login
+        {/* Logo */}
+        <Box sx={{ textAlign: 'center', mb: 5 }}>
+          <SkillArenaLogo height={64} />
+          <Typography sx={{ mt: 1, fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.25em', color: '#9E9892', textTransform: 'uppercase' }}>
+            Play · Learn · Earn
+          </Typography>
+        </Box>
+
+        {/* Card */}
+        <Box
+          sx={{
+            bgcolor: '#fff',
+            borderRadius: '20px',
+            border: '1px solid rgba(0,0,0,0.07)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+            p: { xs: 3, sm: 4 },
+          }}
+        >
+          <Typography variant="h5" sx={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, mb: 0.5, letterSpacing: '-0.02em' }}>
+            Welcome back
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#6B6560', mb: 3.5 }}>
+            Sign in to continue your learning journey
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ borderRadius: 2 }}>
+            <Alert severity="error" sx={{ mb: 2.5, borderRadius: '10px', fontSize: '0.85rem' }}>
               {error}
             </Alert>
           )}
 
-          <TextField
-            fullWidth
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <User size={18} />
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Stack spacing={2.5}>
+            <TextField
+              fullWidth label="Username" value={username}
+              onChange={e => setUsername(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              InputProps={{ startAdornment: <InputAdornment position="start"><User size={16} color="#9E9892" /></InputAdornment> }}
+            />
+            <TextField
+              fullWidth label="Password" type="password" value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              InputProps={{ startAdornment: <InputAdornment position="start"><Lock size={16} color="#9E9892" /></InputAdornment> }}
+            />
 
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock size={18} />
-                </InputAdornment>
-              ),
-            }}
-          />
+            <Button
+              fullWidth variant="contained"
+              onClick={handleLogin}
+              disabled={loading || !username.trim() || !password.trim()}
+              endIcon={loading ? <CircularProgress size={15} color="inherit" /> : <ArrowRight size={16} />}
+              sx={{ py: 1.4, mt: 0.5, borderRadius: '10px', fontSize: '0.95rem', fontWeight: 600 }}
+            >
+              {loading ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </Stack>
 
-          <Button
-            variant="contained"
-            fullWidth
-            onClick={handleLoginClick}
-            disabled={!username.trim() || !password.trim() || loading}
-            sx={{ py: 1.5, fontWeight: 800 }}
-          >
-            {loading ? 'AUTHENTICATING...' : 'LOG IN'}
-          </Button>
-
-          <Typography
-            onClick={onSwitch}
-            sx={{
-              cursor: 'pointer',
-              textAlign: 'center',
-              color: 'primary.main',
-              fontWeight: 700,
-            }}
-          >
-            New hero? Sign up for free
-          </Typography>
-        </Stack>
-      </Paper>
+          {/* Footer link */}
+          <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid rgba(0,0,0,0.07)', textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#6B6560' }}>
+              New to SkillArena?{' '}
+              <Typography
+                component="span" onClick={onSwitch}
+                sx={{ color: '#8A2D2E', fontWeight: 700, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+              >
+                Create account
+              </Typography>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };

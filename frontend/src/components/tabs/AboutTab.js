@@ -117,7 +117,7 @@ const AboutTab = () => {
         sx={{
           p: 4,
           borderRadius: 4,
-          background: `linear-gradient(135deg, #9A2F2E 0%, #C62828 50%, #B71C1C 100%)`,
+          background: `linear-gradient(135deg, #7A2020 0%, #5C1515 100%)`,
           color: 'white',
           boxShadow: '0 8px 24px rgba(154, 47, 46, 0.3)',
           position: 'relative',
@@ -143,13 +143,13 @@ const AboutTab = () => {
               display: 'flex', 
               alignItems: 'center', 
               gap: 1.5,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)', color: '#fff',
             }}
           >
             <Zap size={36} color={LEARNER_COLORS.gold} fill={LEARNER_COLORS.gold} />
             Points & Badges System
           </Typography>
-          <Typography variant="body1" sx={{ mb: 3, opacity: 0.95, fontSize: '1.05rem', lineHeight: 1.7 }}>
+          <Typography variant="body1" sx={{ mb: 3, color: '#fff', fontSize: '1.05rem', lineHeight: 1.7 }}>
             Earn Experience Points (XP) through your learning activities, level up in ranks, unlock badges, and accumulate Arena Coins!
           </Typography>
           <Grid container spacing={3}>
@@ -172,7 +172,7 @@ const AboutTab = () => {
                 <Typography variant="h4" sx={{ fontWeight: 900, color: LEARNER_COLORS.gold, mb: 0.5 }}>
                   {currentXP.toLocaleString()}
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, opacity: 0.9 }}>Current XP</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff' }}>Current XP</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -194,7 +194,7 @@ const AboutTab = () => {
                 <Typography variant="h4" sx={{ fontWeight: 900, color: LEARNER_COLORS.gold, mb: 0.5 }}>
                   {currentRank}
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, opacity: 0.9 }}>Current Rank</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff' }}>Current Rank</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -216,7 +216,7 @@ const AboutTab = () => {
                 <Typography variant="h4" sx={{ fontWeight: 900, color: LEARNER_COLORS.gold, mb: 0.5 }}>
                   {currentBadges.length}
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, opacity: 0.9 }}>Badges Earned</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff' }}>Badges Earned</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -238,7 +238,7 @@ const AboutTab = () => {
                 <Typography variant="h4" sx={{ fontWeight: 900, color: LEARNER_COLORS.gold, mb: 0.5 }}>
                   {arenaCoins}
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, opacity: 0.9 }}>Arena Coins</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff' }}>Arena Coins</Typography>
               </Box>
             </Grid>
           </Grid>

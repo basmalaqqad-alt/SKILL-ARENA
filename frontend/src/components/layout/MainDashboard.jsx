@@ -1,256 +1,184 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {
-  Box,
-  Typography,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Tabs,
-  Tab,
-} from '@mui/material';
-import { BookOpen, Trophy, User, Sparkles, BrainCircuit, MapPin, GraduationCap } from 'lucide-react';
+import { Box, Typography, List, ListItemButton, ListItemIcon, ListItemText, Tabs, Tab, Stack, Chip } from '@mui/material';
+import { BookOpen, Trophy, User, Sparkles, BrainCircuit, GraduationCap, Bot, Zap, ChevronRight, FlaskConical } from 'lucide-react';
 
-import AboutTab from '../tabs/AboutTab';
-import CoursesTab from '../tabs/CoursesTab';
-import MyCoursesTab from '../tabs/MyCoursesTab';
+import AboutTab       from '../tabs/AboutTab';
+import CoursesTab     from '../tabs/CoursesTab';
+import MyCoursesTab   from '../tabs/MyCoursesTab';
 import LeaderboardTab from '../tabs/LeaderboardTab';
-import ProfileTab from '../tabs/ProfileTab';
-import AITab from '../tabs/AITab';
+import ProfileTab     from '../tabs/ProfileTab';
+import AITab          from '../tabs/AITab';
+import PersonalAITutor from '../tabs/PersonalAITutor';
+import SmartStudy from '../tabs/SmartStudy';
 
-const LEARNER_COLORS = {
-  cream: '#F8F4DF',
-  maroon: '#9A2F2E',
-  maroonLight: 'rgba(154, 47, 46, 0.08)',
-};
+const BRAND      = '#8A2D2E';
+const BRAND_SOFT = 'rgba(138,45,46,0.07)';
+const GOLD       = '#FACA07';
+const SIDEBAR_W  = 220;
+
+
+const SkillArenaLogo = ({ height = 40 }) => (
+  <svg height={height} viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block' }}>
+    <text
+      x="260" y="54"
+      textAnchor="middle"
+      style={{
+        fontFamily: "'Arial Black', 'Arial Bold', sans-serif",
+        fontSize: '52px',
+        fontWeight: 900,
+        fill: '#FACA07',
+        stroke: '#7A1E1E',
+        strokeWidth: '6px',
+        paintOrder: 'stroke fill',
+        letterSpacing: '2px',
+      }}
+    >SKILLARENA</text>
+  </svg>
+);
 
 const MainDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [profileData, setProfileData] = useState(null);
 
-  // --- الربط الحقيقي مع الباك إند حق مروحة (تم وضعه داخل المكون صح) ---
   useEffect(() => {
-    const fetchHeroData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        // التأكد من أن السيرفر شغال عندك على بورت 8000
-        const response = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
-          headers: { 'Authorization': `Token ${token}` }
-        });
-        setProfileData(response.data); 
-      } catch (err) {
-        console.error("خطأ في الاتصال بالسيرفر، سيتم عرض البيانات الافتراضية", err);
-      }
-    };
-    fetchHeroData();
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    axios.get('http://127.0.0.1:8000/api/accounts/profile/', { headers: { Authorization: 'Token ' + token } })
+      .then(res => {
+        setProfileData(res.data);
+        try {
+          if (res.data.username) localStorage.setItem('username', res.data.username);
+          if (res.data.role)     localStorage.setItem('role', res.data.role);
+        } catch (_) {}
+      }).catch(() => {});
   }, []);
 
+  const userName = profileData?.username || localStorage.getItem('username') || 'Hero';
+
   const menuItems = [
-    { 
-      id: 0, 
-      label: 'LEARN', 
-      shortLabel: 'LEARN',
-      icon: BookOpen, 
-      subtitle: 'Explore and master new skills',
-      component: <AboutTab />,
-    },
-    { 
-      id: 1, 
-      label: 'AI INSIGHTS', 
-      shortLabel: 'AI',
-      icon: BrainCircuit, 
-      subtitle: 'AI-driven personalized recommendations',
-      component: <AITab userName={profileData?.username || localStorage.getItem('username') || "HERO"} />,
-    },
-    { 
-      id: 2, 
-      label: 'COURSES', 
-      shortLabel: 'COURSES',
-      icon: Sparkles, 
-      subtitle: 'Browse and enroll in courses',
-      component: <CoursesTab />,
-    },
-    { 
-      id: 5, 
-      label: 'MY COURSES', 
-      shortLabel: 'MY COURSES',
-      icon: GraduationCap, 
-      subtitle: 'Your enrolled courses and progress',
-      component: <MyCoursesTab />,
-    },
-    { 
-      id: 3, 
-      label: 'LEADERBOARDS', 
-      shortLabel: 'RANK',
-      icon: Trophy, 
-      subtitle: 'See where you stand among heroes',
-      component: <LeaderboardTab />,
-    },
-    { 
-      id: 4, 
-      label: 'PROFILE', 
-      shortLabel: 'PROFILE',
-      icon: User, 
-      subtitle: 'Your progress and achievements',
-      component: <ProfileTab 
-        userName={profileData?.username || localStorage.getItem('username') || "HERO"} 
-        userXP={profileData?.experience ?? 0}
-        stats={profileData}
-        rank_name={profileData?.rank_name || "WARRIOR"}
-        progress_percentage={profileData?.progress_percentage ?? 0}
-        inProgressCourses={profileData?.in_progress_courses ?? []}
-        completedCourses={profileData?.completed_courses ?? []}
-      />,
+    { id: 0, label: 'Overview',      short: 'Home',    icon: BookOpen,     sub: 'Dashboard & XP sources',           component: <AboutTab /> },
+    { id: 2, label: 'Courses',       short: 'Courses', icon: Sparkles,     sub: 'Browse and enroll',                 component: <CoursesTab /> },
+    { id: 5, label: 'My Learning',   short: 'Mine',    icon: GraduationCap,sub: 'Your progress',                    component: <MyCoursesTab /> },
+    { id: 6, label: 'AI Tutor',      short: 'AI Tutor',icon: Bot,          sub: 'Practice with Gemini AI',  isAI: true,
+      component: <PersonalAITutor userName={userName} /> },
+    { id: 1, label: 'AI Insights',   short: 'Insights',icon: BrainCircuit, sub: 'Personalised recommendations', isAI: true,
+      component: <AITab userName={userName} /> },
+    { id: 7, label: 'Smart Study',    short: 'Study',   icon: FlaskConical, sub: 'AI document assistant', isAI: true,
+      component: <SmartStudy /> },
+    { id: 3, label: 'Leaderboard',   short: 'Ranks',   icon: Trophy,       sub: 'See where you stand',               component: <LeaderboardTab /> },
+    { id: 4, label: 'Profile',       short: 'Profile', icon: User,         sub: 'Your account',
+      component: (
+        <ProfileTab
+          userName={userName}
+          userXP={profileData?.experience ?? 0}
+          stats={profileData}
+          rank_name={profileData?.rank_name || 'Novice'}
+          progress_percentage={profileData?.progress_percentage ?? 0}
+          inProgressCourses={profileData?.in_progress_courses ?? []}
+          completedCourses={profileData?.completed_courses ?? []}
+        />
+      )
     },
   ];
 
-  const currentItem = menuItems.find(item => item.id === activeTab) || menuItems[0];
+  const currentItem = menuItems.find(i => i.id === activeTab) || menuItems[0];
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        minHeight: 'calc(100vh - 64px)',
-        bgcolor: LEARNER_COLORS.cream,
-      }}
-    >
-      {/* Sidebar */}
+    <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 60px)', bgcolor: '#F4F2EF' }}>
+
+      {/* ──────────── Sidebar ──────────── */}
       <Box
         sx={{
-          width: 260,
-          borderRight: `2px solid ${LEARNER_COLORS.maroonLight}`,
-          pr: 2,
-          py: 2,
+          width: SIDEBAR_W, flexShrink: 0,
+          bgcolor: '#fff',
+          borderRight: '1px solid rgba(0,0,0,0.07)',
           display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
-          bgcolor: LEARNER_COLORS.cream,
+          pt: 2.5, pb: 4, px: 1.5,
+          position: 'sticky', top: 60, height: 'calc(100vh - 60px)',
+          overflowY: 'auto',
         }}
       >
-        <Box sx={{ px: 2, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <img
-            src="/logo.png"
-            alt="SkillArena Logo"
-            style={{
-              maxWidth: '180px',
-              height: 'auto',
-              marginBottom: '8px',
-              filter: 'drop-shadow(1px 1px 0 #9A2F2E)',
-            }}
-          />
-          <Typography
-            variant="subtitle2"
-            sx={{
-              color: LEARNER_COLORS.maroon,
-              fontWeight: 800,
-              letterSpacing: 1,
-              fontSize: '0.75rem',
-            }}
-          >
-            HERO ARENA - LEARNER
-          </Typography>
-        </Box>
+        {/* XP pill */}
+        {profileData && (
+          <Box sx={{ mx: 0.5, mb: 3, px: 1.75, py: 1.25, borderRadius: '12px',
+            bgcolor: '#FEFCE8', border: '1px solid rgba(250,202,7,0.3)' }}>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Zap size={15} color="#C8970A" fill={GOLD} />
+              <Box>
+                <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#9E9892', letterSpacing: '0.05em', lineHeight: 1 }}>
+                  {profileData?.rank_name || 'Novice'}
+                </Typography>
+                <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#7A5800', lineHeight: 1.3, fontFamily: "'Syne', sans-serif" }}>
+                  {profileData?.experience ?? 0} XP
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+        )}
 
-        <List sx={{ px: 1 }}>
-          {menuItems.map((it) => {
+        {/* Nav */}
+        <Typography sx={{ px: 1.5, mb: 1, fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.12em', color: '#B5B0AB', textTransform: 'uppercase' }}>
+          Navigation
+        </Typography>
+        <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {menuItems.map(it => {
             const Icon = it.icon;
-            const isActive = activeTab === it.id;
+            const active = activeTab === it.id;
             return (
-              <ListItemButton
-                key={it.id}
-                selected={isActive}
-                onClick={() => setActiveTab(it.id)}
+              <ListItemButton key={it.id} onClick={() => setActiveTab(it.id)}
                 sx={{
-                  borderRadius: 3,
-                  py: 1.5,
-                  mb: 1,
-                  bgcolor: isActive ? LEARNER_COLORS.maroon : 'transparent',
-                  color: isActive ? '#fff' : LEARNER_COLORS.maroon,
-                  '&:hover': {
-                    bgcolor: isActive ? LEARNER_COLORS.maroon : LEARNER_COLORS.maroonLight,
-                  },
-                  '&.Mui-selected': {
-                    bgcolor: LEARNER_COLORS.maroon,
-                    color: '#fff',
-                    '& .MuiListItemIcon-root': { color: '#fff' },
-                  },
+                  borderRadius: '10px', py: 1, px: 1.5, gap: 0,
+                  bgcolor: active ? BRAND_SOFT : 'transparent',
+                  color: active ? BRAND : '#44403C',
+                  '&:hover': { bgcolor: active ? BRAND_SOFT : 'rgba(0,0,0,0.04)', color: active ? BRAND : '#1A1614' },
+                  transition: 'all 0.15s',
                 }}
               >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 40,
-                    color: isActive ? '#fff' : LEARNER_COLORS.maroon,
-                  }}
-                >
-                  <Icon size={20} />
+                <ListItemIcon sx={{ minWidth: 34, color: active ? BRAND : '#9E9892' }}>
+                  <Icon size={17} />
                 </ListItemIcon>
                 <ListItemText
                   primary={it.label}
-                  primaryTypographyProps={{
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                  }}
+                  primaryTypographyProps={{ fontWeight: active ? 700 : 500, fontSize: '0.865rem', letterSpacing: '-0.01em' }}
                 />
+                {it.isAI && (
+                  <Chip label="AI" size="small" sx={{ height: 17, fontSize: '0.58rem', fontWeight: 700, px: 0.25,
+                    bgcolor: active ? BRAND : 'rgba(138,45,46,0.1)', color: active ? '#fff' : BRAND }} />
+                )}
+                {active && !it.isAI && <ChevronRight size={14} color={BRAND} style={{ flexShrink: 0 }} />}
               </ListItemButton>
             );
           })}
         </List>
       </Box>
 
-      {/* Main content */}
-      <Box
-        sx={{
-          flexGrow: 1,
-          px: { xs: 2, md: 4 },
-          py: 3,
-          bgcolor: LEARNER_COLORS.cream,
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <Box>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 900,
-                color: LEARNER_COLORS.maroon,
-                mb: 0.5,
-                fontSize: { xs: '1.5rem', md: '1.75rem' },
-              }}
-            >
-              {currentItem.label}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: LEARNER_COLORS.maroon, fontWeight: 600 }}>
-                {currentItem.subtitle}
-              </Typography>
-              <MapPin size={16} color="#2563eb" />
+      {/* ──────────── Main ──────────── */}
+      <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+
+        {/* Page title bar */}
+        <Box sx={{ bgcolor: '#fff', borderBottom: '1px solid rgba(0,0,0,0.07)', px: { xs: 2.5, md: 4 }, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <SkillArenaLogo height={28} />
+          <Stack direction="row" alignItems="center" gap={2}>
+            <Box sx={{ textAlign: 'right' }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#1A1614', fontSize: '0.88rem' }}>{currentItem.label}</Typography>
+              <Typography variant="caption" sx={{ color: '#9E9892' }}>{currentItem.sub}</Typography>
             </Box>
-          </Box>
-          <Typography variant="caption" sx={{ color: '#374151', fontWeight: 500 }}>
-            Hero: {localStorage.getItem('username') || 'learner'} | Mode: LEARNER
-          </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: '#B5B0AB', fontWeight: 500 }}>{userName} · Learner</Typography>
+          </Stack>
         </Box>
 
         {/* Mobile tabs */}
-        <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 2 }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, v) => setActiveTab(v)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': { fontWeight: 700, fontSize: '0.75rem' },
-              '& .Mui-selected': { color: LEARNER_COLORS.maroon },
-              '& .MuiTabs-indicator': { bgcolor: LEARNER_COLORS.maroon },
-            }}
-          >
-            {menuItems.map((it) => (
-              <Tab key={it.id} label={it.shortLabel} />
-            ))}
+        <Box sx={{ display: { xs: 'block', md: 'none' }, bgcolor: '#fff', borderBottom: '1px solid rgba(0,0,0,0.07)', px: 1 }}>
+          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto"
+            sx={{ '& .MuiTab-root': { minWidth: 'auto', px: 1.5, py: 1.25, fontSize: '0.78rem' } }}>
+            {menuItems.map(it => <Tab key={it.id} value={it.id} label={it.short} />)}
           </Tabs>
         </Box>
 
-        <Box sx={{ mt: 2 }}>
+        {/* Content */}
+        <Box sx={{ flexGrow: 1, px: { xs: 2, md: 4 }, py: { xs: 2.5, md: 3.5 }, className: 'fade-up' }}>
           {currentItem.component}
         </Box>
       </Box>

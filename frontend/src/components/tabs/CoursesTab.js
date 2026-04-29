@@ -1,444 +1,394 @@
+// src/components/tabs/CoursesTab.js
+// Browse page — course cards + quizzes
+// Opens CourseDetailPage and VideoPlayerPage inline
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// إضافة كل المكونات اللازمة لضمان عدم حدوث Error
 import {
-  Box,
-  Typography,
-  TextField,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  InputAdornment,
-  Chip,
-  Paper,
-  Tabs,
-  Tab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Stack,
-  IconButton,
+  Box, Typography, TextField, Grid, Card, CardContent,
+  Button, InputAdornment, Chip, Paper, Tabs, Tab, Stack,
+  IconButton, LinearProgress, Alert, Snackbar, Tooltip,
+  Radio, RadioGroup, FormControlLabel,
 } from '@mui/material';
-import { Search, Video, HelpCircle, Play, ShieldCheck, Star, MessageCircle, UserPlus, Building2, Smartphone, CreditCard } from 'lucide-react';
+import {
+  Search, HelpCircle, ShieldCheck, Star, UserPlus,
+  CheckCircle2, Lock, Play, Video, ArrowLeft,
+} from 'lucide-react';
 
-/**
- * CoursesTab: صفحة الكورسات مع البحث والفلترة.
- * تم تصحيح أخطاء الاستيراد وترتيب الكروت.
- */
-const CoursesTab = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [tabValue, setTabValue] = useState(0);
-  const [courses, setCourses] = useState([]);
-  const [quizzes, setQuizzes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [courseDetail, setCourseDetail] = useState(null);
-  const currentUsername = localStorage.getItem('username');
-  const [commentText, setCommentText] = useState('');
-  const [ratingStars, setRatingStars] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [showPaymentStep, setShowPaymentStep] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState(null);
-  const [cardHolderName, setCardHolderName] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryMonth, setExpiryMonth] = useState('');
-  const [expiryYear, setExpiryYear] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [transactionReference, setTransactionReference] = useState('');
+import CourseDetailPage from './CourseDetailPage';
+import VideoPlayerPage  from './VideoPlayerPage';
 
-  useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem('token');
+const MAROON      = '#9A2F2E';
+const MAROON_SOFT = 'rgba(154,47,46,0.09)';
+const GREEN       = '#2e7d32';
+const GOLD        = '#f59e0b';
+const API         = 'http://127.0.0.1:8000/api';
 
-        const coursesResponse = await axios.get('http://127.0.0.1:8000/api/learner/courses/', {
-          headers: { 'Authorization': `Token ${token}` }
-        });
-        setCourses(coursesResponse.data || []);
+// ── Mini star row ─────────────────────────────────────────────────
+const StarRow = ({ value, size = 12 }) => (
+  <Stack direction="row" spacing={0.2}>
+    {[1,2,3,4,5].map(s => (
+      <Star key={s} size={size}
+        color={value >= s ? GOLD : '#d1ccc0'}
+        fill={value >= s ? GOLD : 'transparent'} />
+    ))}
+  </Stack>
+);
 
-        const quizzesResponse = await axios.get('http://127.0.0.1:8000/api/learner/quizzes/', {
-          headers: { 'Authorization': `Token ${token}` }
-        });
-        setQuizzes(quizzesResponse.data || []);
-      } catch (err) {
-        console.error('Error fetching content:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+// ── Course card ───────────────────────────────────────────────────
+const CourseCard = ({ course, currentUser, onDetails, onWatch, onEnroll }) => {
+  const isPaid     = course.is_paid && Number(course.price) > 0;
+  const isEnrolled = course.enrolled;
+  const isOwnCourse = course.tutor_username === currentUser;
 
-    fetchContent();
-  }, []);
-
-  const filteredCourses = courses.filter((course) =>
-    course.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const openCourseDetail = (course) => {
-    setCourseDetail(course);
-    setCommentText('');
-    setRatingStars(0);
-    setShowPaymentStep(false);
-    setPaymentMethod(null);
-    setCardHolderName('');
-    setCardNumber('');
-    setExpiryMonth('');
-    setExpiryYear('');
-    setCvv('');
-    setTransactionReference('');
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    axios.get(`http://127.0.0.1:8000/api/learner/courses/${course.id}/`, {
-      headers: { Authorization: `Token ${token}` }
-    }).then(res => setCourseDetail(res.data)).catch(() => {});
-  };
-
-  const isPaidCourse = courseDetail?.is_paid && Number(courseDetail?.price) > 0;
-
-  const handleEnrollClick = () => {
-    if (!courseDetail?.id) return;
-    if (isPaidCourse) {
-      setShowPaymentStep(true);
-      return;
-    }
-    handleEnrollSubmit({});
-  };
-
-  const handleEnrollSubmit = async (payload = {}) => {
-    if (!courseDetail?.id) return;
-    setSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`http://127.0.0.1:8000/api/learner/courses/${courseDetail.id}/enroll/`, payload, {
-        headers: { Authorization: `Token ${token}` }
-      });
-      // mark enrolled and store payment info if available
-      const payment = response.data?.payment || null;
-      setCourseDetail(prev => prev ? { ...prev, enrolled: true, payment } : null);
-      setShowPaymentStep(false);
-      setPaymentMethod(null);
-      if (payment) {
-        alert(`Successfully enrolled! Paid SAR ${Number(payment.amount)} (status: ${payment.status})`);
-      } else {
-        alert('Successfully enrolled! Check "My Courses" tab.');
-      }
-      // تحديث قائمة الكورسات
-      const coursesResponse = await axios.get('http://127.0.0.1:8000/api/learner/courses/', {
-        headers: { 'Authorization': `Token ${token}` }
-      });
-      setCourses(coursesResponse.data || []);
-    } catch (e) {
-      console.error(e?.response?.data || e);
-      alert(e.response?.data?.error || 'Error enrolling in course');
-    }
-    setSubmitting(false);
-  };
-
-  const handlePayWithApplePay = () => {
-    setPaymentMethod('apple_pay');
-    handleEnrollSubmit({ payment_method: 'apple_pay' });
-  };
-
-  const handlePayWithCard = () => {
-    if (!cardHolderName.trim() || !cardNumber.trim() || !expiryMonth.trim() || !expiryYear.trim() || !cvv.trim()) return;
-    handleEnrollSubmit({
-      payment_method: 'card',
-      card_holder_name: cardHolderName.trim(),
-      card_number: cardNumber.replace(/\s/g, ''),
-      expiry_month: expiryMonth.trim(),
-      expiry_year: expiryYear.trim(),
-      cvv: cvv.trim(),
-    });
-  };
-
-  const handlePayWithBankTransfer = () => {
-    if (!transactionReference.trim()) {
-      alert('Please enter transaction reference number');
-      return;
-    }
-    handleEnrollSubmit({
-      payment_method: 'bank_transfer',
-      transaction_reference: transactionReference.trim(),
-    });
-  };
-
-  const handleQuickEnroll = async (course) => {
-    if (!course?.id) return;
-    const isPaid = course.is_paid && Number(course.price) > 0;
-    
-    if (isPaid) {
-      // إذا كان مدفوع، نفتح الـ dialog للدفع
-      openCourseDetail(course);
-      setShowPaymentStep(true);
-    } else {
-      // إذا كان مجاني، نسجّل مباشرة
-      setSubmitting(true);
-      try {
-        const token = localStorage.getItem('token');
-        await axios.post(`http://127.0.0.1:8000/api/learner/courses/${course.id}/enroll/`, {}, {
-          headers: { Authorization: `Token ${token}` }
-        });
-        alert('Successfully enrolled! Check "My Courses" tab.');
-        // تحديث قائمة الكورسات
-        const coursesResponse = await axios.get('http://127.0.0.1:8000/api/learner/courses/', {
-          headers: { 'Authorization': `Token ${token}` }
-        });
-        setCourses(coursesResponse.data || []);
-      } catch (err) {
-        console.error('Error enrolling:', err);
-        alert(err.response?.data?.error || 'Error enrolling in course');
-      } finally {
-        setSubmitting(false);
-      }
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!courseDetail?.id || !commentText.trim()) return;
-    setSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(
-        `http://127.0.0.1:8000/api/learner/courses/${courseDetail.id}/comments/`,
-        { text: commentText },
-        { headers: { Authorization: `Token ${token}` } }
-      );
-      setCourseDetail(prev => prev ? { ...prev, comments: [res.data, ...(prev.comments || [])] } : null);
-      setCommentText('');
-    } catch (e) {
-      console.error(e);
-    }
-    setSubmitting(false);
-  };
-
-  const handleRate = async () => {
-    if (!courseDetail?.id || ratingStars < 1 || ratingStars > 5) return;
-    setSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `http://127.0.0.1:8000/api/learner/courses/${courseDetail.id}/rate/`,
-        { stars: ratingStars },
-        { headers: { Authorization: `Token ${token}` } }
-      );
-      setCourseDetail(prev => prev ? { ...prev, average_rating: ratingStars, rating_count: (prev.rating_count || 0) + 1 } : null);
-    } catch (e) {
-      console.error(e);
-    }
-    setSubmitting(false);
-  };
+  const THUMB_COLORS = [
+    'linear-gradient(135deg,#1a237e,#283593)',
+    'linear-gradient(135deg,#1b5e20,#2e7d32)',
+    'linear-gradient(135deg,#4a148c,#6a1b9a)',
+    'linear-gradient(135deg,#b71c1c,#c62828)',
+    'linear-gradient(135deg,#0d47a1,#1565c0)',
+    'linear-gradient(135deg,#33691e,#558b2f)',
+  ];
+  const thumbColor = THUMB_COLORS[course.id % THUMB_COLORS.length];
 
   return (
+    <Card sx={{
+      borderRadius: 3,
+      border: '0.5px solid rgba(0,0,0,0.09)',
+      bgcolor: 'background.paper',
+      transition: '0.2s',
+      '&:hover': { transform: 'translateY(-3px)', boxShadow: 4 },
+      height: '100%', display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Thumbnail */}
+      <Box sx={{ height: 128, background: thumbColor, position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+        onClick={() => onDetails(course)}>
+        {isPaid && !isEnrolled
+          ? <Lock size={28} color="rgba(255,255,255,0.7)" />
+          : (
+            <Box sx={{
+              width: 38, height: 38, borderRadius: '50%',
+              bgcolor: 'rgba(255,255,255,0.15)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Play size={16} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
+            </Box>
+          )
+        }
+        {/* Locked badge */}
+        {isPaid && !isEnrolled && (
+          <Chip label="🔒 Paid" size="small"
+            sx={{ position: 'absolute', top: 8, right: 8,
+              bgcolor: 'rgba(0,0,0,0.5)', color: '#fff',
+              fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
+        )}
+      </Box>
+
+      <CardContent sx={{ flex: 1, p: 1.5, pb: '12px !important', display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+        {/* Price chip */}
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Chip
+            label={isPaid ? `SAR ${Number(course.price).toFixed(0)}` : 'Free'}
+            size="small"
+            sx={{
+              height: 18, fontSize: '0.65rem', fontWeight: 700,
+              bgcolor: isPaid ? 'rgba(154,47,46,0.08)' : 'rgba(46,125,50,0.08)',
+              color:   isPaid ? MAROON : GREEN,
+            }}
+          />
+          {course.tutor_verified && (
+            <Tooltip title="Verified instructor">
+              <ShieldCheck size={14} color="#1a73e8" />
+            </Tooltip>
+          )}
+        </Stack>
+
+        {/* Title */}
+        <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', lineHeight: 1.35,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {course.title}
+        </Typography>
+
+        {/* Tutor */}
+        <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+            {course.tutor_username}
+          </Typography>
+          {course.tutor_verified && (
+            <Typography variant="caption" sx={{ color: '#1a73e8', fontSize: '0.65rem', fontWeight: 600 }}>
+              · Verified
+            </Typography>
+          )}
+        </Stack>
+
+        {/* Rating */}
+        {course.average_rating > 0 && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <StarRow value={Math.round(course.average_rating)} />
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+              ({course.rating_count})
+            </Typography>
+          </Stack>
+        )}
+
+        {/* Progress bar (if enrolled) */}
+        {isEnrolled && (
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+              Progress: {course.enrollment?.progress || 0}%
+            </Typography>
+            <Box sx={{ height: 3, bgcolor: 'rgba(0,0,0,0.08)', borderRadius: 2, mt: 0.25, overflow: 'hidden' }}>
+              <Box sx={{ height: '100%', width: `${course.enrollment?.progress || 0}%`,
+                bgcolor: MAROON, borderRadius: 2 }} />
+            </Box>
+          </Box>
+        )}
+
+        {/* Spacer */}
+        <Box sx={{ flex: 1 }} />
+
+        {/* Action buttons */}
+        <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+          <Button size="small" variant="outlined"
+            onClick={() => onDetails(course)}
+            sx={{ flex: 1, fontSize: '0.72rem', fontWeight: 600, borderRadius: 1.5,
+              borderColor: MAROON_SOFT, color: MAROON,
+              '&:hover': { bgcolor: MAROON_SOFT } }}>
+            Details
+          </Button>
+
+          {isEnrolled ? (
+            <Button size="small" variant="contained"
+              onClick={() => onWatch(course)}
+              startIcon={<Play size={12} fill="#fff" />}
+              sx={{ flex: 1, fontSize: '0.72rem', fontWeight: 700, borderRadius: 1.5,
+                bgcolor: MAROON, '&:hover': { bgcolor: '#7a2627' } }}>
+              Watch
+            </Button>
+          ) : !isOwnCourse ? (
+            <Button size="small" variant="contained"
+              onClick={() => isPaid ? onDetails(course) : onEnroll(course)}
+              startIcon={isPaid ? <Lock size={12} /> : <UserPlus size={12} />}
+              sx={{ flex: 1, fontSize: '0.72rem', fontWeight: 700, borderRadius: 1.5,
+                bgcolor: isPaid ? MAROON : GREEN,
+                '&:hover': { bgcolor: isPaid ? '#7a2627' : '#1b5e20' } }}>
+              {isPaid ? 'Buy' : 'Enroll'}
+            </Button>
+          ) : null}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════════
+//  CoursesTab
+// ════════════════════════════════════════════════════════════════════
+const CoursesTab = () => {
+  const [view,        setView]        = useState('browse'); // browse | detail | player
+  const [courses,     setCourses]     = useState([]);
+  const [quizzes,     setQuizzes]     = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [tabValue,    setTabValue]    = useState(0);
+  const [search,      setSearch]      = useState('');
+  const [filter,      setFilter]      = useState('all');  // all | free | enrolled | paid
+  const [selectedId,  setSelectedId]  = useState(null);
+  const [submitting, setSubmitting] = useState(false); // eslint-disable-line
+
+  // Quiz state
+  const [activeQuiz,    setActiveQuiz]    = useState(null);
+  const [quizAnswers,   setQuizAnswers]   = useState({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizScore,     setQuizScore]     = useState(null);
+
+  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+
+  const token       = localStorage.getItem('token');
+  const currentUser = localStorage.getItem('username');
+  const auth        = { Authorization: 'Token ' + token };
+  const toast       = (msg, severity = 'success') => setSnack({ open: true, msg, severity });
+
+  useEffect(() => { fetchAll(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const [cr, qr] = await Promise.all([
+        axios.get(`${API}/learner/courses/`,  { headers: auth }),
+        axios.get(`${API}/learner/quizzes/`, { headers: auth }),
+      ]);
+      setCourses(cr.data || []);
+      setQuizzes(qr.data || []);
+    } catch { toast('Failed to load courses', 'error'); }
+    finally { setLoading(false); }
+  };
+
+  const enrollFree = async (course) => {
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/learner/courses/${course.id}/enroll/`, {}, { headers: auth });
+      toast(`Enrolled in ${course.title}! 🎉`);
+      fetchAll();
+    } catch (e) { toast(e.response?.data?.error || 'Enrollment failed', 'error'); }
+    finally { setSubmitting(false); }
+  };
+
+  // Filtered courses
+  const filtered = courses.filter(c => {
+    const matchSearch = c.title?.toLowerCase().includes(search.toLowerCase());
+    if (!matchSearch) return false;
+    if (filter === 'free')     return !c.is_paid;
+    if (filter === 'paid')     return c.is_paid;
+    if (filter === 'enrolled') return c.enrolled;
+    return true;
+  });
+
+  // ── Quiz ──────────────────────────────────────────────────────
+  const openQuiz = (quiz) => {
+    setActiveQuiz(quiz); setQuizAnswers({});
+    setQuizSubmitted(false); setQuizScore(null);
+  };
+  const handleSubmitQuiz = async () => {
+    const total   = activeQuiz.questions.length;
+    const correct = activeQuiz.questions.filter(q => quizAnswers[q.id] === q.correct_answer).length;
+    const pct     = Math.round((correct / total) * 100);
+    setQuizScore({ correct, total, pct });
+    setQuizSubmitted(true);
+    try {
+      await axios.post(`${API}/learner/quizzes/${activeQuiz.id}/submit/`,
+        { score_percent: pct }, { headers: auth });
+    } catch {}
+  };
+
+  // ── Views ─────────────────────────────────────────────────────
+  if (view === 'detail' && selectedId) {
+    return (
+      <CourseDetailPage
+        courseId={selectedId}
+        onBack={() => { setView('browse'); fetchAll(); }}
+        onEnrolled={(id) => { setSelectedId(id); fetchAll(); }}
+        onWatch={(id) => { setSelectedId(id); setView('player'); }}
+      />
+    );
+  }
+  if (view === 'player' && selectedId) {
+    return (
+      <VideoPlayerPage
+        courseId={selectedId}
+        onBack={() => { setView('browse'); fetchAll(); }}
+      />
+    );
+  }
+
+  // ── Browse ────────────────────────────────────────────────────
+  return (
     <Box sx={{ p: 1 }}>
-      {/* Tabs للتنقل بين الكورسات والفيديوهات والكويزات */}
-      <Paper
-        sx={{
-          mb: 3,
-          borderRadius: 3,
-          border: '2px solid rgba(154, 47, 46, 0.1)',
-          bgcolor: 'rgba(255, 255, 255, 0.6)',
-        }}
-      >
+
+      {/* Tab bar */}
+      <Paper sx={{ mb: 3, borderRadius: 3, border: '0.5px solid rgba(0,0,0,0.08)', bgcolor: 'background.paper' }}>
         <Tabs
-          value={tabValue}
-          onChange={(_, v) => setTabValue(v)}
-          sx={{
-            '& .MuiTab-root': { fontWeight: 700 },
-            '& .Mui-selected': { color: '#9A2F2E' },
-            '& .MuiTabs-indicator': { bgcolor: '#9A2F2E' },
-          }}
+          value={tabValue} onChange={(_, v) => setTabValue(v)}
+          sx={{ '& .Mui-selected': { color: MAROON }, '& .MuiTabs-indicator': { bgcolor: MAROON },
+            '& .MuiTab-root': { fontWeight: 600, fontSize: '0.82rem' } }}
         >
           <Tab label={`COURSES (${courses.length})`} />
           <Tab label={`QUIZZES (${quizzes.length})`} />
         </Tabs>
       </Paper>
 
-      {/* الكورسات = الفيديوهات المنشورة من التيوتورز */}
+      {/* ═══════ COURSES ═══════ */}
       {tabValue === 0 && (
         <Box>
-          {loading && (
-            <Paper sx={{ p: 2, mb: 2, textAlign: 'center' }}>
-              <Typography variant="body1">Loading...</Typography>
-            </Paper>
-          )}
-          <TextField
-            fullWidth
-            placeholder="Search courses..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ mb: 3, maxWidth: 400 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={20} />
-                </InputAdornment>
-              ),
-            }}
-          />
-              {/* Price summary removed (was referencing `course` outside map) */}
-          {filteredCourses.length === 0 ? (
-            <Paper
-              sx={{
-                p: 4,
-                borderRadius: 3,
-                border: '2px solid rgba(154, 47, 46, 0.1)',
-                bgcolor: 'rgba(255, 255, 255, 0.6)',
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                No courses yet. Tutors publish courses by uploading videos—check back later!
+          {/* Search + filter */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2.5 }}>
+            <TextField
+              placeholder="Search courses…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              size="small"
+              sx={{ maxWidth: 320 }}
+              InputProps={{ startAdornment: <InputAdornment position="start"><Search size={16} /></InputAdornment> }}
+            />
+            <Stack direction="row" spacing={0.75}>
+              {[
+                { id: 'all',  label: 'All'  },
+                { id: 'free', label: 'Free' },
+                { id: 'paid', label: 'Paid' },
+              ].map(f => (
+                <Button key={f.id} size="small"
+                  variant={filter === f.id ? 'contained' : 'outlined'}
+                  onClick={() => setFilter(f.id)}
+                  sx={{
+                    borderRadius: 2, fontSize: '0.75rem', fontWeight: 600,
+                    bgcolor: filter === f.id ? MAROON : 'transparent',
+                    borderColor: filter === f.id ? MAROON : 'rgba(0,0,0,0.12)',
+                    color: filter === f.id ? '#fff' : 'text.secondary',
+                    '&:hover': { bgcolor: filter === f.id ? '#7a2627' : MAROON_SOFT },
+                  }}
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </Stack>
+          </Stack>
+
+          {loading && <LinearProgress sx={{ borderRadius: 2, mb: 2, '& .MuiLinearProgress-bar': { bgcolor: MAROON } }} />}
+
+          {!loading && filtered.length === 0 && (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 3, bgcolor: 'rgba(255,255,255,0.5)' }}>
+              <Video size={36} color="#bbb" style={{ marginBottom: 10 }} />
+              <Typography sx={{ color: 'text.secondary' }}>
+                {search ? `No courses match "${search}"` : 'No courses yet.'}
               </Typography>
             </Paper>
-          ) : (
-            <Grid container spacing={3}>
-              {filteredCourses.map((course) => (
-                <Grid item xs={12} sm={6} md={4} key={course.id}>
-                  <Card
-                    sx={{
-                      borderRadius: 3,
-                      border: '2px solid rgba(154, 47, 46, 0.1)',
-                      bgcolor: 'rgba(255, 255, 255, 0.6)',
-                      transition: '0.3s',
-                      '&:hover': { transform: 'translateY(-8px)', boxShadow: 6 },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        height: 140,
-                        bgcolor: '#9A2F2E',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Video size={48} color="#fff" />
-                    </Box>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-                        <Chip
-                          label={course.display_price || (course.is_paid && course.price ? `SAR ${Number(course.price)}` : 'Free')}
-                          size="small"
-                          sx={{
-                            bgcolor: course.is_paid ? 'warning.light' : 'success.light',
-                            color: course.is_paid ? 'warning.dark' : 'success.dark',
-                            fontWeight: 700,
-                          }}
-                        />
-                        {course.tutor_verified && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }} title="Trusted Tutor">
-                            <ShieldCheck size={18} color="#9A2F2E" />
-                          </Box>
-                        )}
-                      </Stack>
-                      <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>
-                        {course.title}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 700, mb: 1 }}>
-                        Tutor: {course.tutor_username}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }} noWrap>
-                        {course.description || 'No description'}
-                      </Typography>
-                      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => openCourseDetail(course)}
-                          startIcon={<MessageCircle size={16} />}
-                          sx={{ flex: 1, minWidth: 100, fontWeight: 700 }}
-                        >
-                          Details
-                        </Button>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleQuickEnroll(course)}
-                          startIcon={<UserPlus size={16} />}
-                          disabled={submitting}
-                          sx={{
-                            flex: 1,
-                            minWidth: 100,
-                            fontWeight: 800,
-                            bgcolor: '#2e7d32',
-                            '&:hover': { bgcolor: '#1b5e20' },
-                          }}
-                        >
-                          Enroll
-                        </Button>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
           )}
+
+          <Grid container spacing={2.5}>
+            {filtered.map(course => (
+              <Grid item xs={12} sm={6} md={4} key={course.id}>
+                <CourseCard
+                  course={course}
+                  currentUser={currentUser}
+                  onDetails={(c) => { setSelectedId(c.id); setView('detail'); }}
+                  onWatch={(c)   => { setSelectedId(c.id); setView('player'); }}
+                  onEnroll={enrollFree}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </Box>
       )}
 
-      {/* محتوى التاب Quizzes */}
+      {/* ═══════ QUIZZES ═══════ */}
       {tabValue === 1 && (
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 900, mb: 3 }}>
-            AVAILABLE QUIZZES ({quizzes.length})
-          </Typography>
           {quizzes.length === 0 ? (
-            <Paper
-              sx={{
-                p: 4,
-                borderRadius: 3,
-                border: '2px solid rgba(154, 47, 46, 0.1)',
-                bgcolor: 'rgba(255, 255, 255, 0.6)',
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                No quizzes available yet. Check back later!
-              </Typography>
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 3 }}>
+              <Typography sx={{ color: 'text.secondary' }}>No quizzes available yet.</Typography>
             </Paper>
           ) : (
-            <Grid container spacing={3}>
-              {quizzes.map((quiz) => (
+            <Grid container spacing={2.5}>
+              {quizzes.map(quiz => (
                 <Grid item xs={12} sm={6} md={4} key={quiz.id}>
-                  <Card
-                    sx={{
-                      borderRadius: 3,
-                      border: '2px solid rgba(154, 47, 46, 0.1)',
-                      bgcolor: 'rgba(255, 255, 255, 0.6)',
-                      transition: '0.3s',
-                      '&:hover': { transform: 'translateY(-8px)', boxShadow: 6 },
-                    }}
-                  >
+                  <Card sx={{ borderRadius: 3, border: '0.5px solid rgba(0,0,0,0.09)', bgcolor: 'background.paper',
+                    transition: '0.2s', '&:hover': { transform: 'translateY(-3px)', boxShadow: 4 } }}>
                     <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                        <HelpCircle size={24} color="#9A2F2E" />
-                        <Chip
-                          label={`${quiz.questions?.length || 0} Questions`}
-                          size="small"
-                          sx={{ bgcolor: 'rgba(154, 47, 46, 0.1)', color: '#9A2F2E' }}
-                        />
-                      </Box>
-                      <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>
-                        {quiz.title}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: 'text.secondary', mb: 2 }}
-                      >
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                        <HelpCircle size={22} color={MAROON} />
+                        <Chip label={`${quiz.questions?.length || 0} Questions`} size="small"
+                          sx={{ bgcolor: MAROON_SOFT, color: MAROON, fontWeight: 700, fontSize: '0.7rem' }} />
+                      </Stack>
+                      <Typography sx={{ fontWeight: 700, mb: 0.5 }}>{quiz.title}</Typography>
+                      {quiz.course_title && (
+                        <Chip label={`📚 ${quiz.course_title}`} size="small"
+                          sx={{ mb: 1.5, bgcolor: 'rgba(46,125,50,0.08)', color: GREEN, fontWeight: 600 }} />
+                      )}
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, fontSize: '0.82rem' }}>
                         {quiz.description || 'No description'}
                       </Typography>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        sx={{
-                          borderRadius: 2,
-                          fontWeight: 800,
-                          bgcolor: '#9A2F2E',
-                          '&:hover': { bgcolor: '#7a2627' },
-                        }}
-                      >
+                      <Button variant="contained" fullWidth onClick={() => openQuiz(quiz)}
+                        sx={{ borderRadius: 2, fontWeight: 700, bgcolor: MAROON, '&:hover': { bgcolor: '#7a2627' } }}>
                         Start Quiz
                       </Button>
                     </CardContent>
@@ -450,225 +400,97 @@ const CoursesTab = () => {
         </Box>
       )}
 
-      {/* Course detail dialog: comments, rating, enroll */}
-      <Dialog open={!!courseDetail} onClose={() => setCourseDetail(null)} maxWidth="sm" fullWidth>
-        {courseDetail && (
-          <>
-            <DialogTitle sx={{ fontWeight: 900, color: '#9A2F2E' }}>
-              {courseDetail.title}
-              {courseDetail.tutor_verified && (
-                <Box component="span" sx={{ ml: 1 }} title="Trusted Tutor">
-                  <ShieldCheck size={22} color="#9A2F2E" style={{ verticalAlign: 'middle' }} />
-                </Box>
-              )}
-            </DialogTitle>
-            <DialogContent>
-              <Typography variant="body2" sx={{ mb: 2 }}>{courseDetail.description || 'No description'}</Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, mb: 2 }}>
-                Tutor: {courseDetail.tutor_username} · {courseDetail.display_price || (courseDetail.is_paid && courseDetail.price ? `SAR ${Number(courseDetail.price)}` : 'Free')}
-              </Typography>
-              {courseDetail.average_rating != null && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Star size={18} color="#fbc02d" fill="#fbc02d" />
-                  <Typography variant="body2">{courseDetail.average_rating} ({courseDetail.rating_count} ratings)</Typography>
-                </Box>
-              )}
+      {/* ═══════ QUIZ DIALOG ═══════ */}
+      {activeQuiz && (
+        <Box sx={{
+          position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, p: 2,
+        }}>
+          <Paper sx={{ borderRadius: 3, width: '100%', maxWidth: 600, maxHeight: '85vh',
+            overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ px: 3, py: 2.5, borderBottom: '0.5px solid rgba(0,0,0,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography sx={{ fontWeight: 700, color: MAROON }}>{activeQuiz.title}</Typography>
+                {activeQuiz.course_title && (
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>📚 {activeQuiz.course_title}</Typography>
+                )}
+              </Box>
+              <Button size="small" onClick={() => setActiveQuiz(null)} sx={{ color: 'text.secondary' }}>Close</Button>
+            </Box>
 
-              <Typography variant="subtitle2" sx={{ fontWeight: 800, mt: 2, mb: 1 }}>Rate this course (1-5 stars)</Typography>
-              <Stack direction="row" spacing={0.5} sx={{ mb: 2 }}>
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <IconButton key={s} size="small" onClick={() => setRatingStars(s)}>
-                    <Star size={24} color={ratingStars >= s ? '#fbc02d' : '#ccc'} fill={ratingStars >= s ? '#fbc02d' : 'transparent'} />
-                  </IconButton>
-                ))}
-                <Button size="small" variant="outlined" onClick={handleRate} disabled={submitting || ratingStars < 1}>Submit</Button>
-              </Stack>
-
-              <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>Comments</Typography>
-              <Stack spacing={1} sx={{ mb: 2, maxHeight: 200, overflow: 'auto' }}>
-                {(courseDetail.comments || []).map((c) => (
-                  <Paper key={c.id} variant="outlined" sx={{ p: 1.5 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 700 }}>{c.username}</Typography>
-                    <Typography variant="body2">{c.text}</Typography>
-                  </Paper>
-                ))}
-              </Stack>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                sx={{ mb: 1 }}
-              />
-              <Button size="small" onClick={handleAddComment} disabled={submitting || !commentText.trim()}>Post comment</Button>
-
-              {/* خطوة الدفع للكورس المدفوع */}
-              {showPaymentStep && isPaidCourse && (
-                <Paper variant="outlined" sx={{ mt: 3, p: 2.5, borderRadius: 2, borderColor: '#9A2F2E', bgcolor: 'rgba(154, 47, 46, 0.04)' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, color: '#9A2F2E' }}>
-                    Choose Payment Method — {courseDetail.display_price || (courseDetail.is_paid && courseDetail.price ? `SAR ${Number(courseDetail.price)}` : 'Free')}
+            <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2 }}>
+              {!quizSubmitted ? (
+                <Stack spacing={2}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    Answer all {activeQuiz.questions.length} questions then submit.
                   </Typography>
-                  
-                  {/* معلومات البنك للإنستركتور */}
-                  {courseDetail.tutor_bank_account && (
-                    <Paper sx={{ p: 2, mb: 2, bgcolor: 'rgba(46, 125, 50, 0.1)', borderRadius: 2, border: '1px solid #2e7d32' }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, color: '#2e7d32', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Building2 size={18} /> Bank Transfer Information
+                  {activeQuiz.questions.map((q, qi) => (
+                    <Paper key={q.id} sx={{ p: 2.5, borderRadius: 2.5,
+                      border: `0.5px solid ${quizAnswers[q.id] ? 'rgba(154,47,46,0.2)' : 'rgba(0,0,0,0.08)'}` }}>
+                      <Typography sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9rem' }}>
+                        Q{qi + 1}: {q.question_text}
                       </Typography>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2"><strong>Bank:</strong> {courseDetail.tutor_bank_account.bank_name}</Typography>
-                        <Typography variant="body2"><strong>Account Holder:</strong> {courseDetail.tutor_bank_account.account_holder_name}</Typography>
-                        <Typography variant="body2"><strong>Account Number:</strong> {courseDetail.tutor_bank_account.account_number}</Typography>
-                        {courseDetail.tutor_bank_account.iban && (
-                          <Typography variant="body2"><strong>IBAN:</strong> {courseDetail.tutor_bank_account.iban}</Typography>
-                        )}
-                        {courseDetail.tutor_bank_account.swift_code && (
-                          <Typography variant="body2"><strong>SWIFT:</strong> {courseDetail.tutor_bank_account.swift_code}</Typography>
-                        )}
-                        {courseDetail.tutor_bank_account.branch_name && (
-                          <Typography variant="body2"><strong>Branch:</strong> {courseDetail.tutor_bank_account.branch_name}</Typography>
-                        )}
-                      </Stack>
+                      <RadioGroup value={quizAnswers[q.id] || ''}
+                        onChange={e => setQuizAnswers(p => ({ ...p, [q.id]: parseInt(e.target.value) }))}>
+                        {[q.option1, q.option2, q.option3, q.option4].map((opt, i) => (
+                          <FormControlLabel key={i} value={i + 1}
+                            control={<Radio size="small" sx={{ color: MAROON, '&.Mui-checked': { color: MAROON } }} />}
+                            label={<Typography variant="body2">{opt}</Typography>} />
+                        ))}
+                      </RadioGroup>
                     </Paper>
-                  )}
-
-                  <Stack direction="row" spacing={2} sx={{ mb: 2, flexWrap: 'wrap' }}>
-                    <Button
-                      variant={paymentMethod === 'apple_pay' ? 'contained' : 'outlined'}
-                      startIcon={<Smartphone size={20} />}
-                      onClick={() => setPaymentMethod('apple_pay')}
-                      sx={{ flex: 1, minWidth: 120, fontWeight: 700, borderColor: '#9A2F2E', color: '#9A2F2E', '&.MuiButton-contained': { bgcolor: '#9A2F2E' } }}
-                    >
-                      Apple Pay
-                    </Button>
-                    <Button
-                      variant={paymentMethod === 'card' ? 'contained' : 'outlined'}
-                      startIcon={<CreditCard size={20} />}
-                      onClick={() => setPaymentMethod('card')}
-                      sx={{ flex: 1, minWidth: 120, fontWeight: 700, borderColor: '#9A2F2E', color: '#9A2F2E', '&.MuiButton-contained': { bgcolor: '#9A2F2E' } }}
-                    >
-                      Card
-                    </Button>
-                    <Button
-                      variant={paymentMethod === 'bank_transfer' ? 'contained' : 'outlined'}
-                      startIcon={<Building2 size={20} />}
-                      onClick={() => setPaymentMethod('bank_transfer')}
-                      sx={{ flex: 1, minWidth: 120, fontWeight: 700, borderColor: '#9A2F2E', color: '#9A2F2E', '&.MuiButton-contained': { bgcolor: '#9A2F2E' } }}
-                    >
-                      Bank Transfer
-                    </Button>
-                  </Stack>
-
-                  {paymentMethod === 'card' && (
-                    <Stack spacing={1.5}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Cardholder Name"
-                        value={cardHolderName}
-                        onChange={(e) => setCardHolderName(e.target.value)}
-                        placeholder="Cardholder Name"
-                      />
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Card Number"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').slice(0, 19))}
-                        placeholder="1234 5678 9012 3456"
-                        inputProps={{ maxLength: 19 }}
-                      />
-                      <Stack direction="row" spacing={1}>
-                        <TextField
-                          size="small"
-                          label="Month"
-                          value={expiryMonth}
-                          onChange={(e) => setExpiryMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                          placeholder="MM"
-                          sx={{ width: 80 }}
-                          inputProps={{ maxLength: 2 }}
-                        />
-                        <TextField
-                          size="small"
-                          label="Year"
-                          value={expiryYear}
-                          onChange={(e) => setExpiryYear(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          placeholder="YYYY"
-                          sx={{ width: 100 }}
-                          inputProps={{ maxLength: 4 }}
-                        />
-                        <TextField
-                          size="small"
-                          label="CVV"
-                          value={cvv}
-                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          placeholder="123"
-                          type="password"
-                          sx={{ width: 80 }}
-                          inputProps={{ maxLength: 4 }}
-                        />
-                      </Stack>
-                      <Button variant="contained" onClick={handlePayWithCard} disabled={submitting || !cardHolderName.trim() || cardNumber.replace(/\s/g, '').length < 13 || !expiryMonth || !expiryYear || cvv.length < 3} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' }, fontWeight: 800 }}>
-                        Complete Payment & Enroll
-                      </Button>
-                    </Stack>
-                  )}
-
-                  {paymentMethod === 'bank_transfer' && (
-                    <Stack spacing={1.5}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                        After transferring the amount to the bank account above, enter the transaction reference number:
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Transaction Reference Number"
-                        value={transactionReference}
-                        onChange={(e) => setTransactionReference(e.target.value)}
-                        placeholder="Enter transaction reference"
-                      />
-                      <Button variant="contained" onClick={handlePayWithBankTransfer} disabled={submitting || !transactionReference.trim()} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' }, fontWeight: 800 }}>
-                        Confirm Transfer & Enroll
-                      </Button>
-                    </Stack>
-                  )}
-
-                  {paymentMethod === 'apple_pay' && (
-                    <Button variant="contained" fullWidth onClick={handlePayWithApplePay} disabled={submitting} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' }, fontWeight: 800 }}>
-                      Pay with Apple Pay & Enroll
-                    </Button>
-                  )}
-                </Paper>
+                  ))}
+                </Stack>
+              ) : (
+                <Stack alignItems="center" spacing={2} sx={{ py: 2 }}>
+                  <Typography sx={{ fontWeight: 900, fontSize: '2.5rem',
+                    color: quizScore.pct >= 50 ? GREEN : MAROON }}>
+                    {quizScore.pct}%
+                  </Typography>
+                  <Typography sx={{ color: 'text.secondary' }}>
+                    {quizScore.correct}/{quizScore.total} correct
+                  </Typography>
+                  <LinearProgress variant="determinate" value={quizScore.pct}
+                    sx={{ width: '100%', height: 10, borderRadius: 5,
+                      '& .MuiLinearProgress-bar': { bgcolor: quizScore.pct >= 50 ? GREEN : MAROON } }} />
+                  {quizScore.pct >= 100 && <Alert severity="success" sx={{ borderRadius: 2 }}>🎉 Perfect! +300 XP</Alert>}
+                  {quizScore.pct >= 50 && quizScore.pct < 100 && <Alert severity="success" sx={{ borderRadius: 2 }}>🌟 Good job! +150 XP</Alert>}
+                  {quizScore.pct < 50 && <Alert severity="warning" sx={{ borderRadius: 2 }}>Keep practicing! Try again to earn XP.</Alert>}
+                </Stack>
               )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => { setCourseDetail(null); setShowPaymentStep(false); }}>Close</Button>
-              {!showPaymentStep && (
-                <Button
-                  variant="contained"
-                  onClick={handleEnrollClick}
-                  disabled={submitting || courseDetail?.enrolled || courseDetail?.tutor_username === currentUsername}
-                  sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}
-                >
-                  {isPaidCourse ? 'Pay & Enroll' : 'Enroll in course'}
-                </Button>
-              )}
+            </Box>
 
-              {/* Show Watch only if enrolled or if the course is free. Owners no longer get free view by username. */}
-              {(courseDetail.enrolled || !courseDetail.is_paid) ? (
-                <Button variant="contained" href={courseDetail.video_url} target="_blank" rel="noopener noreferrer" startIcon={<Play size={18} />} sx={{ bgcolor: '#9A2F2E', '&:hover': { bgcolor: '#7a2627' } }}>
-                  Watch
+            <Box sx={{ px: 3, py: 2, borderTop: '0.5px solid rgba(0,0,0,0.08)',
+              display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button onClick={() => setActiveQuiz(null)} sx={{ color: 'text.secondary' }}>Close</Button>
+              {!quizSubmitted ? (
+                <Button variant="contained"
+                  onClick={handleSubmitQuiz}
+                  disabled={Object.keys(quizAnswers).length < activeQuiz.questions.length}
+                  sx={{ bgcolor: MAROON, fontWeight: 700, borderRadius: 2, '&:hover': { bgcolor: '#7a2627' } }}>
+                  Submit ({Object.keys(quizAnswers).length}/{activeQuiz.questions.length})
                 </Button>
               ) : (
-                <Button variant="outlined" onClick={() => { setShowPaymentStep(true); }} startIcon={<Play size={18} />} sx={{ bgcolor: '#fff', borderColor: '#9A2F2E', color: '#9A2F2E' }}>
-                  Pay & Enroll
+                <Button variant="outlined" onClick={() => { setQuizAnswers({}); setQuizSubmitted(false); setQuizScore(null); }}
+                  sx={{ color: MAROON, borderColor: MAROON }}>
+                  Try again
                 </Button>
               )}
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+            </Box>
+          </Paper>
+        </Box>
+      )}
+
+      {/* Toast */}
+      <Snackbar open={snack.open} autoHideDuration={4000}
+        onClose={() => setSnack(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={snack.severity} onClose={() => setSnack(s => ({ ...s, open: false }))}
+          sx={{ borderRadius: 2.5, fontWeight: 600 }}>
+          {snack.msg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

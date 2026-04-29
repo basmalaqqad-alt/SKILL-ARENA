@@ -1,6 +1,10 @@
+# backend/accounts/views/profile_view.py
+# أضيف PATCH على /api/accounts/profile/ لرفع الشهادة وتفعيل Verified تلقائياً
+
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from ..serializers.profile_serializers import ProfileSerializer
 from courses.models import CourseEnrollment
 
@@ -44,9 +48,39 @@ def _build_badges(user, completed_count: int) -> list[str]:
     return badges
 
 
-@api_view(['GET'])
+# ── GET profile ──────────────────────────────────────────────────
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def user_profile(request):
+
+    # ── PATCH: update certificate → auto verified ────────────────
+    if request.method == 'PATCH':
+        user = request.user
+
+        # رفع الشهادة — بمجرد ما تنحفظ is_trusted_tutor يصير True تلقائياً
+        certificate = request.FILES.get('certificate')
+        if certificate:
+            # التحقق من نوع الملف
+            name = certificate.name.lower()
+            if not (name.endswith('.pdf') or name.endswith('.jpg') or
+                    name.endswith('.jpeg') or name.endswith('.png')):
+                return Response({'error': 'Only PDF, JPG, or PNG files are accepted.'}, status=400)
+            if certificate.size > 10 * 1024 * 1024:
+                return Response({'error': 'File must be under 10 MB.'}, status=400)
+            user.certificate = certificate
+
+        # حفظ معلومات إضافية اختيارية (لو بدك تحفظها بالمستقبل)
+        # مثلاً: user.institution = request.data.get('institution', user.institution)
+
+        user.save()
+
+        return Response({
+            'message':        'Profile updated. You are now a Verified Instructor!',
+            'is_trusted_tutor': getattr(user, 'is_trusted_tutor', False),
+        })
+
+    # ── GET: return full profile ─────────────────────────────────
     user = request.user
     enrollments = CourseEnrollment.objects.filter(user=user).select_related('course')
 
@@ -66,38 +100,35 @@ def user_profile(request):
     arena_coins = xp // 1000
 
     hero_data = {
-        'role': user.role,
-        'username': user.username,
-        'avatar_url': request.build_absolute_uri(user.avatar.url) if user.avatar else None,
-        'experience': xp,
-        'arena_coins': arena_coins,
-        'rank_name': rank_name,
+        'role':                user.role,
+        'username':            user.username,
+        'avatar_url':          request.build_absolute_uri(user.avatar.url) if user.avatar else None,
+        'experience':          xp,
+        'arena_coins':         arena_coins,
+        'rank_name':           rank_name,
         'progress_percentage': progress_percentage,
         'stats': {
-            'level': level,
-            'experience': xp,
-            'quests_completed': len(completed),
+            'level':             level,
+            'experience':        xp,
+            'quests_completed':  len(completed),
         },
-        'badges': badges,
+        'badges':              badges,
         'in_progress_courses': in_progress,
-        'completed_courses': completed,
-        'is_trusted_tutor': getattr(user, 'is_trusted_tutor', False),
+        'completed_courses':   completed,
+        'is_trusted_tutor':    getattr(user, 'is_trusted_tutor', False),
     }
 
     serializer = ProfileSerializer(hero_data)
     return Response(serializer.data)
 
 
+# ── Tutor students (unchanged) ───────────────────────────────────
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def tutor_students(request):
-    """
-    يرجع قائمة الطلاب اللي سجلوا في كورسات التيوتر الحالي فقط.
-    """
     if request.user.role != 'tutor':
         return Response({'error': 'Only tutors can access this endpoint'}, status=403)
 
-    # جيب كل التسجيلات في كورسات هذا التيوتر
     enrollments = (
         CourseEnrollment.objects
         .filter(course__tutor=request.user)
@@ -105,23 +136,22 @@ def tutor_students(request):
         .order_by('-enrolled_at')
     )
 
-    # تجميع الطلاب مع الكورسات المسجلين فيها
     students_dict = {}
     for e in enrollments:
         uid = e.user.id
         if uid not in students_dict:
             students_dict[uid] = {
-                'id': uid,
-                'name': e.user.get_full_name() or e.user.username,
-                'username': e.user.username,
+                'id':         uid,
+                'name':       e.user.get_full_name() or e.user.username,
+                'username':   e.user.username,
                 'avatar_url': request.build_absolute_uri(e.user.avatar.url) if e.user.avatar else None,
-                'courses': [],
+                'courses':    [],
             }
         students_dict[uid]['courses'].append({
-            'course_id': e.course.id,
+            'course_id':    e.course.id,
             'course_title': e.course.title,
-            'progress': e.progress,
-            'completed': e.completed,
+            'progress':     e.progress,
+            'completed':    e.completed,
         })
 
     return Response(list(students_dict.values()))

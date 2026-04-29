@@ -43,9 +43,15 @@ const ProfileTab = ({ userName, userXP, stats, rank_name, progress_percentage, i
                 height: 120,
                 border: '4px solid white',
                 boxShadow: 3,
-                ml: 2
+                ml: 2,
+                bgcolor: '#7A1E1E',
+                fontSize: '2.5rem',
+                fontWeight: 900,
+                color: '#fff',
               }}
-            />
+            >
+              {!stats?.avatar_url && userName?.charAt(0)?.toUpperCase()}
+            </Avatar>
           </Grid>
           <Grid item xs>
             {/* استدعاء المكون الاحترافي وتمرير البيانات الحقيقية له */}
