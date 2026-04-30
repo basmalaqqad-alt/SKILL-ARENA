@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import {
   Users, Video, HelpCircle, User, BarChart2,
-  CreditCard, ShieldCheck, Zap, ChevronRight,
+  CreditCard, ShieldCheck, Zap, ChevronRight, Trophy,
 } from 'lucide-react';
 import Logo from '../common/Logo';
 
@@ -20,7 +20,8 @@ import AIInsights          from './AIInsights';
 import VideoUpload         from './VideoUpload';
 import Quizzes             from './Quizzes';
 import BankAccount         from './BankAccount';
-import VerificationSubmit  from './VerificationSubmit';   // ← جديد
+import VerificationSubmit  from './VerificationSubmit';
+import LeaderboardTab      from '../tabs/LeaderboardTab';
 
 const BRAND      = '#8A2D2E';
 const BRAND_SOFT = 'rgba(138,45,46,0.07)';
@@ -28,18 +29,19 @@ const GOLD       = '#FACA07';
 const SIDEBAR_W  = 220;
 
 const NAV = [
+  { id: 3, label: 'Profile',       short: 'Profile',  icon: User,        sub: 'Your public profile' },
   { id: 0, label: 'My Students',   short: 'Students', icon: Users,       sub: "Track students' activity" },
   { id: 1, label: 'My Courses',    short: 'Courses',  icon: Video,       sub: 'Publish and manage courses' },
   { id: 2, label: 'Quizzes',       short: 'Quizzes',  icon: HelpCircle,  sub: 'Create quizzes for learners' },
-  { id: 3, label: 'Profile',       short: 'Profile',  icon: User,        sub: 'Your public profile' },
   { id: 4, label: 'AI Insights',   short: 'Insights', icon: BarChart2,   sub: 'Smart analytics dashboard', isAI: true },
   { id: 5, label: 'Bank Account',  short: 'Bank',     icon: CreditCard,  sub: 'Earnings & payments' },
-  { id: 6, label: 'Verification',  short: 'Verify',   icon: ShieldCheck, sub: 'Get your Verified badge' },  // ← جديد
+  { id: 6, label: 'Verification',  short: 'Verify',   icon: ShieldCheck, sub: 'Get your Verified badge' },
+  { id: 7, label: 'Leaderboard',   short: 'Ranks',    icon: Trophy,      sub: 'Arena Champions' },
 ];
 
 
 const TutorDashboard = () => {
-  const [tab,            setTab]            = useState(0);
+  const [tab,            setTab]            = useState(3);
   const [profile,        setProfile]        = useState(null);
   const [isTrustedTutor, setIsTrustedTutor] = useState(false);
   // حالة الطلب — عشان نحط badge على الـ tab
@@ -75,6 +77,7 @@ const TutorDashboard = () => {
     if (tab === 4) return <AIInsights />;
     if (tab === 5) return <BankAccount />;
     if (tab === 6) return <VerificationSubmit />;
+    if (tab === 7) return <LeaderboardTab />;
     return null;
   };
 

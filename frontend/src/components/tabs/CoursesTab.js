@@ -132,19 +132,6 @@ const CourseCard = ({ course, currentUser, onDetails, onWatch, onEnroll }) => {
           </Stack>
         )}
 
-        {/* Progress bar (if enrolled) */}
-        {isEnrolled && (
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-              Progress: {course.enrollment?.progress || 0}%
-            </Typography>
-            <Box sx={{ height: 3, bgcolor: 'rgba(0,0,0,0.08)', borderRadius: 2, mt: 0.25, overflow: 'hidden' }}>
-              <Box sx={{ height: '100%', width: `${course.enrollment?.progress || 0}%`,
-                bgcolor: MAROON, borderRadius: 2 }} />
-            </Box>
-          </Box>
-        )}
-
         {/* Spacer */}
         <Box sx={{ flex: 1 }} />
 
@@ -240,6 +227,7 @@ const CoursesTab = () => {
     if (!matchSearch) return false;
     if (filter === 'free')     return !c.is_paid;
     if (filter === 'paid')     return c.is_paid;
+    if (filter === 'verified') return c.tutor_verified === true;
     if (filter === 'enrolled') return c.enrolled;
     return true;
   });
@@ -312,17 +300,18 @@ const CoursesTab = () => {
             />
             <Stack direction="row" spacing={0.75}>
               {[
-                { id: 'all',  label: 'All'  },
-                { id: 'free', label: 'Free' },
-                { id: 'paid', label: 'Paid' },
+                { id: 'all',      label: 'All'      },
+                { id: 'free',     label: 'Free'     },
+                { id: 'paid',     label: 'Paid'     },
+                { id: 'verified', label: '✓ Verified' },
               ].map(f => (
                 <Button key={f.id} size="small"
                   variant={filter === f.id ? 'contained' : 'outlined'}
                   onClick={() => setFilter(f.id)}
                   sx={{
                     borderRadius: 2, fontSize: '0.75rem', fontWeight: 600,
-                    bgcolor: filter === f.id ? MAROON : 'transparent',
-                    borderColor: filter === f.id ? MAROON : 'rgba(0,0,0,0.12)',
+                    bgcolor: filter === f.id ? (f.id === 'verified' ? '#1a73e8' : MAROON) : 'transparent',
+                    borderColor: filter === f.id ? (f.id === 'verified' ? '#1a73e8' : MAROON) : 'rgba(0,0,0,0.12)',
                     color: filter === f.id ? '#fff' : 'text.secondary',
                     '&:hover': { bgcolor: filter === f.id ? '#7a2627' : MAROON_SOFT },
                   }}

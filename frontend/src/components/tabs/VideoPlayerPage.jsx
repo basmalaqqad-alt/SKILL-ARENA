@@ -134,7 +134,13 @@ const VideoPlayerPage = ({ courseId, onBack }) => {
   const [loading,    setLoading]    = useState(true);
   const [lessons,    setLessons]    = useState([]);
   const [activeIdx,  setActiveIdx]  = useState(0);
-  const [completed,  setCompleted]  = useState(new Set());
+  const [completed,  setCompleted]  = useState(() => {
+    // استرجع الـ completed lessons من localStorage
+    try {
+      const saved = localStorage.getItem(`completed_${courseId}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
   const [sideOpen,   setSideOpen]   = useState(true);
   const [marking,    setMarking]    = useState(false);
 
@@ -163,12 +169,15 @@ const VideoPlayerPage = ({ courseId, onBack }) => {
   const markComplete = async () => {
     if (!activeLesson || marking) return;
     setMarking(true);
-    setCompleted(prev => new Set([...prev, activeLesson.id]));
+    const newCompleted = new Set([...completed, activeLesson.id]);
+    setCompleted(newCompleted);
+    // حفظ في localStorage
+    try {
+      localStorage.setItem(`completed_${courseId}`, JSON.stringify([...newCompleted]));
+    } catch {}
     // Auto-advance
     setTimeout(() => { if (activeIdx < lessons.length - 1) setActiveIdx(activeIdx + 1); }, 500);
     try {
-      // Mark overall course progress
-      const pct = Math.round(((completed.size + 1) / lessons.length) * 100);
       await axios.post(`${API}/learner/courses/${courseId}/complete/`, {}, { headers: auth }).catch(() => {});
     } catch {}
     finally { setMarking(false); }
@@ -311,12 +320,17 @@ const VideoPlayerPage = ({ courseId, onBack }) => {
                   </Button>
                 )}
                 {lessonMats.slice(0, 3).map(m => (
-                  <Button key={m.id} size="small" variant="text"
-                    startIcon={<FileText size={13} />}
+                  <Button key={m.id} size="medium" variant="contained"
+                    startIcon={<FileText size={16} />}
                     href={m.file_url} target="_blank" rel="noopener noreferrer" download
-                    sx={{ color: 'text.secondary', fontSize: '0.75rem', '&:hover': { color: MAROON } }}>
+                    endIcon={<Download size={15} />}
+                    sx={{
+                      bgcolor: 'rgba(0,0,0,0.08)', color: 'text.primary',
+                      borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700,
+                      boxShadow: 'none', px: 2.5, py: 1,
+                      '&:hover': { bgcolor: MAROON_SOFT, color: MAROON, boxShadow: 'none' },
+                    }}>
                     {m.title}
-                    <Download size={11} style={{ marginLeft: 4 }} />
                   </Button>
                 ))}
               </Stack>

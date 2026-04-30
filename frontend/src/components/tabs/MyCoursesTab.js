@@ -100,8 +100,23 @@ const MyCoursesTab = () => {
 
   const CourseCard = ({ course }) => {
     const isPaid     = course.is_paid && Number(course.price) > 0;
-    const isComplete = course.enrollment?.completed;
-    const progress   = course.enrollment?.progress || 0;
+
+    // جيب الـ completed lessons من localStorage
+    const savedCompleted = (() => {
+      try {
+        const saved = localStorage.getItem(`completed_${course.id}`);
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    })();
+
+    // احسب الـ progress من localStorage إذا في بيانات
+    const totalLessons = course.video_count || 1;
+    const localProgress = savedCompleted.length > 0
+      ? Math.round((savedCompleted.length / totalLessons) * 100)
+      : course.enrollment?.progress || 0;
+
+    const isComplete = localProgress >= 100 || course.enrollment?.completed;
+    const progress   = localProgress;
     const thumbColor = THUMB_COLORS[course.id % THUMB_COLORS.length];
 
     return (

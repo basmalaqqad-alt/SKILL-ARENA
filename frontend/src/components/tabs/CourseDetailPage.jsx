@@ -12,7 +12,7 @@ import {
   ArrowLeft, ShieldCheck, GraduationCap, Building2,
   BookOpen, Play, Lock, ChevronDown, ChevronUp,
   Star, FileText, CheckCircle2, Smartphone, CreditCard,
-  Sparkles,
+  Sparkles, Download,
 } from 'lucide-react';
 
 const MAROON      = '#9A2F2E';
@@ -36,8 +36,9 @@ const Stars = ({ value, size = 14 }) => (
 );
 
 // ── Lesson row inside syllabus ────────────────────────────────────
-const LessonRow = ({ lesson, idx, isAccessible }) => (
+const LessonRow = ({ lesson, idx, isAccessible, onWatch, courseId }) => (
   <Stack direction="row" alignItems="center" spacing={1.5}
+    onClick={() => isAccessible && onWatch && onWatch(courseId)}
     sx={{
       px: 1.5, py: 1, borderRadius: '8px',
       cursor: isAccessible ? 'pointer' : 'default',
@@ -465,25 +466,53 @@ const CourseDetailPage = ({ courseId, onBack, onEnrolled, onWatch }) => {
                     lesson={{ title: 'Main lesson', has_quiz: false }}
                     idx={0}
                     isAccessible={true}
+                    onWatch={onWatch}
+                    courseId={courseId}
                   />
                   {extraVids.map((v, i) => (
-                    <LessonRow key={v.id} lesson={v} idx={i + 1} isAccessible={isEnrolled} />
+                    <LessonRow key={v.id} lesson={v} idx={i + 1} isAccessible={isEnrolled} onWatch={onWatch} courseId={courseId} />
                   ))}
                   {materials.length > 0 && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="overline" sx={{ color: 'text.secondary', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
+                    <Box sx={{ mt: 1.5 }}>
+                      <Typography variant="overline" sx={{ color: 'text.secondary', fontSize: '0.65rem', display: 'block', mb: 1 }}>
                         Materials
                       </Typography>
-                      {materials.map(m => (
-                        <Stack key={m.id} direction="row" alignItems="center" spacing={1.5}
-                          sx={{ px: 1.5, py: 0.75 }}>
-                          <FileText size={13} color={isEnrolled ? MAROON : '#bbb'} />
-                          <Typography variant="caption" sx={{ color: isEnrolled ? 'text.primary' : 'text.disabled', fontSize: '0.78rem' }}>
-                            {m.title}
-                          </Typography>
-                          {!isEnrolled && <Lock size={11} color="#bbb" />}
-                        </Stack>
-                      ))}
+                      <Stack spacing={0.75}>
+                        {materials.map(m => (
+                          isEnrolled ? (
+                            <Button
+                              key={m.id}
+                              component="a"
+                              href={m.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download
+                              variant="outlined"
+                              size="medium"
+                              startIcon={<FileText size={16} color={MAROON} />}
+                              endIcon={<Download size={14} />}
+                              sx={{
+                                justifyContent: 'flex-start', borderRadius: '10px',
+                                borderColor: 'rgba(154,47,46,0.25)', color: MAROON,
+                                fontWeight: 600, fontSize: '0.85rem', px: 2, py: 0.9,
+                                bgcolor: MAROON_SOFT,
+                                '&:hover': { bgcolor: 'rgba(154,47,46,0.15)', borderColor: MAROON },
+                              }}
+                            >
+                              {m.title}
+                            </Button>
+                          ) : (
+                            <Stack key={m.id} direction="row" alignItems="center" spacing={1.5}
+                              sx={{ px: 1.5, py: 0.75 }}>
+                              <FileText size={14} color="#bbb" />
+                              <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '0.82rem' }}>
+                                {m.title}
+                              </Typography>
+                              <Lock size={12} color="#bbb" />
+                            </Stack>
+                          )
+                        ))}
+                      </Stack>
                     </Box>
                   )}
                 </Box>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Box, Stack, Typography, TextField, Button, Alert, CircularProgress, InputAdornment } from '@mui/material';
-import { User, Mail, Lock, CloudUpload, ArrowRight, GraduationCap, BookOpen } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, GraduationCap, BookOpen } from 'lucide-react';
 
 const ROLES = [
   { value: 'learner', label: 'Learner',   icon: BookOpen,      desc: 'Browse & enroll in courses' },
@@ -13,12 +13,10 @@ const SignupForm = ({ onSignup, onSwitch }) => {
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
   const [role, setRole]                 = useState('learner');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [fileName, setFileName]         = useState('');
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
 
-  const isInvalid = !username.trim() || !email.trim() || !password.trim() || (role === 'tutor' && !selectedFile);
+  const isInvalid = !username.trim() || !email.trim() || !password.trim();
 
   const handleSignup = async () => {
     if (isInvalid) return;
@@ -26,7 +24,6 @@ const SignupForm = ({ onSignup, onSwitch }) => {
     const fd = new FormData();
     fd.append('username', username); fd.append('email', email);
     fd.append('password', password); fd.append('role', role);
-    if (role === 'tutor' && selectedFile) fd.append('certificate', selectedFile);
     try {
       const res = await axios.post('http://127.0.0.1:8000/api/accounts/auth/signup/', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -128,25 +125,6 @@ const SignupForm = ({ onSignup, onSwitch }) => {
             <TextField fullWidth label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)}
               InputProps={{ startAdornment: <InputAdornment position="start"><Lock size={15} color="#9E9892" /></InputAdornment> }} />
 
-            {role === 'tutor' && (
-              <Box
-                onClick={() => document.getElementById('sa-cert-upload').click()}
-                sx={{
-                  border: fileName ? '1.5px solid #2e7d32' : '1.5px dashed rgba(138,45,46,0.3)',
-                  borderRadius: '12px', p: 2.5, textAlign: 'center', cursor: 'pointer',
-                  bgcolor: fileName ? 'rgba(46,125,50,0.03)' : 'rgba(138,45,46,0.02)',
-                  transition: 'all 0.15s',
-                  '&:hover': { bgcolor: 'rgba(138,45,46,0.04)', borderColor: '#8A2D2E' },
-                }}
-              >
-                <input id="sa-cert-upload" type="file" hidden accept=".pdf,.doc,.docx" onChange={e => { const f=e.target.files[0]; if(f){setSelectedFile(f);setFileName(f.name);} }} />
-                <CloudUpload size={24} color={fileName ? '#2e7d32' : '#8A2D2E'} style={{ marginBottom: 6 }} />
-                <Typography variant="body2" sx={{ fontWeight: 600, color: fileName ? '#2e7d32' : '#8A2D2E' }}>
-                  {fileName ? fileName.slice(0, 30) + (fileName.length > 30 ? '…' : '') : 'Upload teaching certificate'}
-                </Typography>
-                <Typography variant="caption">PDF or Word document · Required for verification</Typography>
-              </Box>
-            )}
 
             <Button
               fullWidth variant="contained"
