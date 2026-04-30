@@ -2,26 +2,9 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Box, Stack, Typography, TextField, Button, Alert, CircularProgress, InputAdornment } from '@mui/material';
 import { User, Lock, ArrowRight } from 'lucide-react';
+import Logo from '../common/Logo';
 
 
-const SkillArenaLogo = ({ height = 40 }) => (
-  <svg height={height} viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block' }}>
-    <text
-      x="260" y="54"
-      textAnchor="middle"
-      style={{
-        fontFamily: "'Arial Black', 'Arial Bold', sans-serif",
-        fontSize: '52px',
-        fontWeight: 900,
-        fill: '#FACA07',
-        stroke: '#7A1E1E',
-        strokeWidth: '6px',
-        paintOrder: 'stroke fill',
-        letterSpacing: '2px',
-      }}
-    >SKILLARENA</text>
-  </svg>
-);
 
 const LoginForm = ({ onLogin, onSwitch }) => {
   const [username, setUsername] = useState('');
@@ -65,7 +48,7 @@ const LoginForm = ({ onLogin, onSwitch }) => {
 
         {/* Logo */}
         <Box sx={{ textAlign: 'center', mb: 5 }}>
-          <SkillArenaLogo height={64} />
+          <Logo height={64} />
           <Typography sx={{ mt: 1, fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.25em', color: '#9E9892', textTransform: 'uppercase' }}>
             Play · Learn · Earn
           </Typography>
