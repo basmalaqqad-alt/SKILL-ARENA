@@ -12,30 +12,13 @@ import AITab          from '../tabs/AITab';
 import PersonalAITutor from '../tabs/PersonalAITutor';
 import SmartStudy from '../tabs/SmartStudy';
 
+// ⭐ استيراد الشعار الجديد
+import logoImg from '../../assets/logo.png';
+
 const BRAND      = '#8A2D2E';
 const BRAND_SOFT = 'rgba(138,45,46,0.07)';
 const GOLD       = '#FACA07';
 const SIDEBAR_W  = 220;
-
-
-const SkillArenaLogo = ({ height = 40 }) => (
-  <svg height={height} viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block' }}>
-    <text
-      x="260" y="54"
-      textAnchor="middle"
-      style={{
-        fontFamily: "'Arial Black', 'Arial Bold', sans-serif",
-        fontSize: '52px',
-        fontWeight: 900,
-        fill: '#FACA07',
-        stroke: '#7A1E1E',
-        strokeWidth: '6px',
-        paintOrder: 'stroke fill',
-        letterSpacing: '2px',
-      }}
-    >SKILLARENA</text>
-  </svg>
-);
 
 const MainDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -159,7 +142,14 @@ const MainDashboard = () => {
 
         {/* Page title bar */}
         <Box sx={{ bgcolor: '#fff', borderBottom: '1px solid rgba(0,0,0,0.07)', px: { xs: 2.5, md: 4 }, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <SkillArenaLogo height={28} />
+          
+          {/* ⭐ الشعار الجديد */}
+          <img 
+            src={logoImg} 
+            alt="SkillArena Logo" 
+            style={{ height: 32, objectFit: 'contain' }} 
+          />
+
           <Stack direction="row" alignItems="center" gap={2}>
             <Box sx={{ textAlign: 'right' }}>
               <Typography variant="body2" sx={{ fontWeight: 700, color: '#1A1614', fontSize: '0.88rem' }}>{currentItem.label}</Typography>
