@@ -11,6 +11,8 @@ import {
   Users, Video, HelpCircle, User, BarChart2,
   CreditCard, ShieldCheck, Zap, ChevronRight,
 } from 'lucide-react';
+import Logo from '../common/Logo';
+
 
 import MyStudents          from './MyStudents';
 import TutorProfile        from './TutorProfile';
@@ -35,25 +37,6 @@ const NAV = [
   { id: 6, label: 'Verification',  short: 'Verify',   icon: ShieldCheck, sub: 'Get your Verified badge' },  // ← جديد
 ];
 
-
-const SkillArenaLogo = ({ height = 40 }) => (
-  <svg height={height} viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block' }}>
-    <text
-      x="260" y="54"
-      textAnchor="middle"
-      style={{
-        fontFamily: "'Arial Black', 'Arial Bold', sans-serif",
-        fontSize: '52px',
-        fontWeight: 900,
-        fill: '#FACA07',
-        stroke: '#7A1E1E',
-        strokeWidth: '6px',
-        paintOrder: 'stroke fill',
-        letterSpacing: '2px',
-      }}
-    >SKILLARENA</text>
-  </svg>
-);
 
 const TutorDashboard = () => {
   const [tab,            setTab]            = useState(0);
@@ -188,7 +171,7 @@ const TutorDashboard = () => {
 
         {/* Page title bar */}
         <Box sx={{ bgcolor: '#fff', borderBottom: '1px solid rgba(0,0,0,0.07)', px: { xs: 2.5, md: 4 }, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <SkillArenaLogo height={28} />
+          <Logo height={28} />
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Box sx={{ textAlign: 'right' }}>
               <Typography variant="body2" sx={{ fontWeight: 700, color: '#1A1614', fontSize: '0.88rem' }}>{current.label}</Typography>

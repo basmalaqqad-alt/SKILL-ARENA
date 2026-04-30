@@ -1,6 +1,8 @@
 import React from 'react';
 import { Box, Stack, Typography, Avatar, Tooltip, Chip } from '@mui/material';
 import { User, ShieldCheck, Zap } from 'lucide-react';
+import Logo from '../common/Logo';
+
 
 const Header = ({ userXP, avatarUrl, isTutor, isTrustedTutor }) => {
   const username = localStorage.getItem('username') || '';
@@ -19,34 +21,7 @@ const Header = ({ userXP, avatarUrl, isTutor, isTrustedTutor }) => {
       }}
     >
       {/* Logo */}
-      <Stack direction="row" alignItems="baseline" spacing={0}>
-        <Typography
-          sx={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
-            fontSize: '1.3rem',
-            letterSpacing: '-0.04em',
-            color: '#8A2D2E',
-            lineHeight: 1,
-          }}
-        >
-          SKILL
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
-            fontSize: '1.3rem',
-            letterSpacing: '-0.04em',
-            color: '#FACA07',
-            lineHeight: 1,
-            // thin stroke so gold reads on white
-            WebkitTextStroke: '0.4px #C8970A',
-          }}
-        >
-          ARENA
-        </Typography>
-      </Stack>
+      <Logo height={28} />
 
       {/* Right side */}
       <Stack direction="row" spacing={1.5} alignItems="center">
