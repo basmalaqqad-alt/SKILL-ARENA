@@ -21,7 +21,7 @@ const GOLD       = '#FACA07';
 const SIDEBAR_W  = 220;
 
 const MainDashboard = () => {
-  const [activeTab, setActiveTab] = useState(4);
+  const [activeTab, setActiveTab] = useState(0);
   const [profileData, setProfileData] = useState(null);
 
   useEffect(() => {
@@ -40,6 +40,16 @@ const MainDashboard = () => {
   const userName = profileData?.username || localStorage.getItem('username') || 'Hero';
 
   const menuItems = [
+    { id: 0, label: 'Overview',      short: 'Home',    icon: BookOpen,     sub: 'Dashboard & XP sources',           component: <AboutTab /> },
+    { id: 2, label: 'Courses',       short: 'Courses', icon: Sparkles,     sub: 'Browse and enroll',                 component: <CoursesTab /> },
+    { id: 5, label: 'My Learning',   short: 'Mine',    icon: GraduationCap,sub: 'Your progress',                    component: <MyCoursesTab /> },
+    { id: 6, label: 'AI Tutor',      short: 'AI Tutor',icon: Bot,          sub: 'Practice with Gemini AI',  isAI: true,
+      component: <PersonalAITutor userName={userName} /> },
+    { id: 1, label: 'AI Insights',   short: 'Insights',icon: BrainCircuit, sub: 'Personalised recommendations', isAI: true,
+      component: <AITab userName={userName} /> },
+    { id: 7, label: 'Smart Study',    short: 'Study',   icon: FlaskConical, sub: 'AI document assistant', isAI: true,
+      component: <SmartStudy /> },
+    { id: 3, label: 'Leaderboard',   short: 'Ranks',   icon: Trophy,       sub: 'See where you stand',               component: <LeaderboardTab /> },
     { id: 4, label: 'Profile',       short: 'Profile', icon: User,         sub: 'Your account',
       component: (
         <ProfileTab
@@ -53,13 +63,6 @@ const MainDashboard = () => {
         />
       )
     },
-    { id: 0, label: 'Overview',      short: 'Home',    icon: BookOpen,     sub: 'Dashboard & XP sources',       component: <AboutTab /> },
-    { id: 2, label: 'Courses',       short: 'Courses', icon: Sparkles,     sub: 'Browse and enroll',            component: <CoursesTab /> },
-    { id: 5, label: 'My Learning',   short: 'Mine',    icon: GraduationCap,sub: 'Your progress',                component: <MyCoursesTab /> },
-    { id: 6, label: 'AI Tutor',      short: 'AI Tutor',icon: Bot,          sub: 'Practice with AI', isAI: true, component: <PersonalAITutor userName={userName} /> },
-    { id: 1, label: 'AI Insights',   short: 'Insights',icon: BrainCircuit, sub: 'Personalised recommendations', isAI: true, component: <AITab userName={userName} /> },
-    { id: 7, label: 'Smart Study',   short: 'Study',   icon: FlaskConical, sub: 'AI document assistant', isAI: true, component: <SmartStudy /> },
-    { id: 3, label: 'Leaderboard',   short: 'Ranks',   icon: Trophy,       sub: 'See where you stand',          component: <LeaderboardTab /> },
   ];
 
   const currentItem = menuItems.find(i => i.id === activeTab) || menuItems[0];
