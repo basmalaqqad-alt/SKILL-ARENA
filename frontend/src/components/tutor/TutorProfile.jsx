@@ -101,7 +101,7 @@ const TutorProfile = () => {
             <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem' }}>Total XP</Typography>
           </Box>
         </Stack>
-        <Box sx={{ mt: 2.5 }}>
+        <Box sx={{ mt: 2.5, maxWidth: 280 }}>
           <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
             <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{rank.name}</Typography>
             {nextRank && <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{nextRank.min - xp} XP to {nextRank.name}</Typography>}
